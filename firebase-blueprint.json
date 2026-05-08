@@ -1,0 +1,101 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile and overall study statistics",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "targetLevel": { "type": "string", "enum": ["Beginner", "Elementary", "Intermediate", "Advanced"] },
+        "currentStreak": { "type": "number" },
+        "lastActiveDate": { "type": "string" },
+        "lastLessonId": { "type": "string" },
+        "totalWordsLearned": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email"]
+    },
+    "DailyPlan": {
+      "title": "Daily Plan",
+      "description": "Daily learning tasks and progress for a specific date",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string" },
+        "level": { "type": "string" },
+        "tasks": { 
+          "type": "array",
+          "items": { "type": "object" }
+        },
+        "totalTasks": { "type": "number" },
+        "completedTasks": { "type": "number" },
+        "progressPercent": { "type": "number" },
+        "totalPoints": { "type": "number" },
+        "studyMinutes": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["date", "tasks"]
+    },
+    "WeakWord": {
+      "title": "Weak Word",
+      "description": "Word that the user has made mistakes on",
+      "type": "object",
+      "properties": {
+        "wordId": { "type": "string" },
+        "chinese": { "type": "string" },
+        "pinyin": { "type": "string" },
+        "meaning": { "type": "string" },
+        "level": { "type": "string" },
+        "mistakeCount": { "type": "number" },
+        "correctReviewCount": { "type": "number" },
+        "strengthLevel": { "type": "string", "enum": ["weak", "medium", "improving", "mastered"] },
+        "mistakeTypes": { "type": "object" },
+        "lastMistakeAt": { "type": "string", "format": "date-time" },
+        "lastReviewedAt": { "type": "string", "format": "date-time" },
+        "nextReviewAt": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["wordId", "chinese"]
+    },
+    "MockTestResult": {
+      "title": "Mock Test Result",
+      "description": "Result of a TOCFL mock test",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "testId": { "type": "string" },
+        "testTitle": { "type": "string" },
+        "level": { "type": "string" },
+        "score": { "type": "number" },
+        "totalQuestions": { "type": "number" },
+        "correctAnswers": { "type": "number" },
+        "timeSpent": { "type": "number" },
+        "completedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "testId", "score"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Main user document"
+    },
+    "/users/{userId}/dailyPlans/{date}": {
+      "schema": "DailyPlan",
+      "description": "Daily progress tracking"
+    },
+    "/users/{userId}/weakWords/{wordId}": {
+      "schema": "WeakWord",
+      "description": "List of weak words for spaced repetition"
+    },
+    "/users/{userId}/mockTestResults/{resultId}": {
+      "schema": "MockTestResult",
+      "description": "History of mock test results"
+    }
+  }
+}

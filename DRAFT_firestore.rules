@@ -1,0 +1,100 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helpers ---
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    function isVerified() { return isSignedIn() && request.auth.token.email_verified == true; }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+
+    // --- User Rules ---
+    match /users/{userId} {
+      function isValidUser(data) {
+        return data.uid == request.auth.uid 
+          && data.email is string && data.email.size() <= 200
+          && (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 100))
+          && (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 500))
+          && (!('targetLevel' in data) || (data.targetLevel in ['Beginner', 'Elementary', 'Intermediate', 'Advanced']))
+          && (!('currentStreak' in data) || (data.currentStreak is number && data.currentStreak >= 0))
+          && (!('lastActiveDate' in data) || (data.lastActiveDate is string))
+          && (!('lastLessonId' in data) || (data.lastLessonId is string))
+          && (!('totalWordsLearned' in data) || (data.totalWordsLearned is number && data.totalWordsLearned >= 0));
+      }
+
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUser(incoming()) && incoming().createdAt == request.time;
+      allow update: if isOwner(userId) && isValidUser(incoming()) && (
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'displayName', 'photoURL', 'targetLevel', 'currentStreak', 
+          'lastActiveDate', 'lastLessonId', 'totalWordsLearned', 'updatedAt'
+        ])
+      ) && incoming().updatedAt == request.time;
+
+      // --- Daily Plans ---
+      match /dailyPlans/{date} {
+        function isValidPlan(data) {
+          return data.date is string 
+            && data.tasks is list && data.tasks.size() <= 20
+            && data.totalTasks is number && data.totalTasks >= 0
+            && data.completedTasks is number && data.completedTasks >= 0
+            && data.progressPercent is number && data.progressPercent >= 0 && data.progressPercent <= 100
+            && data.totalPoints is number && data.totalPoints >= 0;
+        }
+
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidPlan(incoming()) && incoming().createdAt == request.time;
+        allow update: if isOwner(userId) && isValidPlan(incoming()) && (
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'tasks', 'completedTasks', 'progressPercent', 'totalPoints', 'studyMinutes', 'updatedAt'
+          ])
+        ) && incoming().updatedAt == request.time;
+      }
+
+      // --- Weak Words ---
+      match /weakWords/{wordId} {
+        function isValidWeakWord(data) {
+          return data.wordId is string && data.wordId.size() <= 100
+            && data.chinese is string && data.chinese.size() <= 100
+            && data.pinyin is string && data.pinyin.size() <= 100
+            && data.meaning is string && data.meaning.size() <= 500
+            && data.mistakeCount is number && data.mistakeCount >= 0
+            && data.correctReviewCount is number && data.correctReviewCount >= 0
+            && data.strengthLevel in ['weak', 'medium', 'improving', 'mastered'];
+        }
+
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidWeakWord(incoming()) && incoming().createdAt == request.time;
+        allow update: if isOwner(userId) && isValidWeakWord(incoming()) && (
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'mistakeCount', 'mistakeTypes', 'lastMistakeAt', 'lastReviewedAt', 
+            'strengthLevel', 'nextReviewAt', 'updatedAt', 'correctReviewCount'
+          ])
+        ) && incoming().updatedAt == request.time;
+      }
+
+      // --- Mock Test Results ---
+      match /mockTestResults/{resultId} {
+        function isValidResult(data) {
+          return data.id is string
+            && data.testId is string
+            && data.score is number && data.score >= 0
+            && data.totalQuestions is number && data.totalQuestions >= 0;
+        }
+
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidResult(incoming()) && incoming().completedAt == request.time;
+        // Results are typically immutable
+      }
+    }
+  }
+}
