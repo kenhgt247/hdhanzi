@@ -90,7 +90,7 @@ export function MockTestSession() {
       }
     });
 
-    const resultId = await mockTestService.saveResult(user.id, {
+    const resultData = {
       testId: test.id,
       testTitle: test.title,
       level: test.level,
@@ -101,13 +101,20 @@ export function MockTestSession() {
       readingScore,
       answers,
       timeSpentMinutes: Math.round((test.durationMinutes * 60 - timeLeft) / 60)
-    });
+    };
 
-    if (resultId) {
-      navigate(`/student/tocfl-result/${resultId}`);
-    } else {
-      setIsSubmitting(false);
-      alert('Có lỗi xảy ra khi lưu kết quả.');
+    try {
+      const resultId = await mockTestService.saveResult(user.id, resultData);
+      if (resultId) {
+        navigate(`/student/tocfl-result/${resultId}`, { state: { localResult: { ...resultData, id: resultId } } });
+      } else {
+        // Fallback if saveResult returned null
+        navigate(`/student/tocfl-result/local`, { state: { localResult: { ...resultData, id: 'local' } } });
+      }
+    } catch (error) {
+      console.error('Error saving result:', error);
+      // Fallback if saveResult throws
+      navigate(`/student/tocfl-result/local`, { state: { localResult: { ...resultData, id: 'local' } } });
     }
   };
 

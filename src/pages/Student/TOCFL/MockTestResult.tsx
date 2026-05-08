@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { 
   Trophy, 
@@ -21,6 +21,7 @@ import { cn } from '../../../lib/utils';
 export function MockTestResultPage() {
   const { resultId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const [result, setResult] = useState<MockTestResult | null>(null);
   const [test, setTest] = useState<MockTest | null>(null);
@@ -28,7 +29,22 @@ export function MockTestResultPage() {
 
   useEffect(() => {
     const fetchResult = async () => {
-      if (!resultId || !user?.id) return;
+      // First try to load from navigation state (useful for guest or save failures)
+      const localResult = location.state?.localResult;
+      
+      if (localResult) {
+        setResult(localResult);
+        const t = getMockTestById(localResult.testId);
+        if (t) setTest(t);
+        setLoading(false);
+        return;
+      }
+
+      if (!resultId || !user?.id) {
+        setLoading(false);
+        return;
+      }
+      
       setLoading(true);
       const res = await mockTestService.getResult(user.id, resultId);
       if (res) {
@@ -39,7 +55,7 @@ export function MockTestResultPage() {
       setLoading(false);
     };
     fetchResult();
-  }, [resultId, user?.id]);
+  }, [resultId, user?.id, location.state]);
 
   if (loading) {
     return (
