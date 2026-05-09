@@ -2,10 +2,21 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
+import fs from 'fs';
 import {defineConfig, loadEnv} from 'vite';
 
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, '.', '');
+
+  let firebaseConfigStr = "{}";
+  try {
+    const configPath = path.resolve(__dirname, 'firebase-applet-config.json');
+    if (fs.existsSync(configPath)) {
+      firebaseConfigStr = fs.readFileSync(configPath, 'utf8');
+    }
+  } catch (e) {
+    console.warn('Could not load firebase-applet-config.json');
+  }
 
   return {
     plugins: [
@@ -35,7 +46,8 @@ export default defineConfig(({mode}) => {
       })
     ],
     define: {
-      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
+      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
+      '__FIREBASE_CONFIG__': firebaseConfigStr
     },
     resolve: {
       alias: {
