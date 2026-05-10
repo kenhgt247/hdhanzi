@@ -10,6 +10,7 @@ service cloud.firestore {
     function isSignedIn() { return request.auth != null; }
     function isVerified() { return isSignedIn() && request.auth.token.email_verified == true; }
     function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    function isAdmin() { return isSignedIn() && request.auth.token.email == 'buivanbac@gmail.com'; }
     function incoming() { return request.resource.data; }
     function existing() { return resource.data; }
     function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
@@ -25,17 +26,17 @@ service cloud.firestore {
           && (!('currentStreak' in data) || (data.currentStreak is number && data.currentStreak >= 0))
           && (!('lastActiveDate' in data) || (data.lastActiveDate is string))
           && (!('lastLessonId' in data) || (data.lastLessonId is string))
-          && (!('totalWordsLearned' in data) || (data.totalWordsLearned is number && data.totalWordsLearned >= 0));
+          && (!('totalWordsLearned' in data) || (data.totalWordsLearned is number && data.totalWordsLearned >= 0))
+          && (!('role' in data) || (data.role in ['student', 'teacher', 'admin']))
+          && (!('name' in data) || (data.name is string && data.name.size() <= 100))
+          && (!('lastLoginAt' in data) || true)
+          && (!('createdAt' in data) || true);
       }
 
-      allow get: if isOwner(userId);
-      allow create: if isOwner(userId) && isVerified() && isValidUser(incoming()) && incoming().createdAt == request.time;
-      allow update: if isOwner(userId) && isVerified() && isValidUser(incoming()) && (
-        incoming().diff(existing()).affectedKeys().hasOnly([
-          'displayName', 'photoURL', 'targetLevel', 'currentStreak', 
-          'lastActiveDate', 'lastLessonId', 'totalWordsLearned', 'updatedAt'
-        ])
-      ) && incoming().updatedAt == request.time;
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
+      allow create: if isOwner(userId) && isValidUser(incoming());
+      allow update: if (isOwner(userId) || isAdmin()) && isValidUser(incoming());
 
       // --- Daily Plans ---
       match /dailyPlans/{date} {
@@ -94,6 +95,27 @@ service cloud.firestore {
         allow list: if isOwner(userId);
         allow create: if isOwner(userId) && isVerified() && isValidResult(incoming()) && incoming().completedAt == request.time;
       }
+    }
+
+    // --- Global Content Operations (Read for all, Write for Admin) ---
+    match /lessons/{lessonId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    match /vocabulary/{vocabId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    match /dialogues/{dialogueId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    match /mockTests/{testId} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
   }
 }

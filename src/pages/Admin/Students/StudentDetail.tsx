@@ -117,7 +117,7 @@ export function StudentDetail() {
                   <div>
                     <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">Lần cuối học</p>
                     <p className="text-sm font-bold text-gray-900">
-                      {student.lastLoginAt ? student.lastLoginAt.toDate().toLocaleDateString('vi-VN') : 'Chưa có dữ liệu'}
+                      {student.lastLoginAt ? new Date(typeof student.lastLoginAt.toDate === 'function' ? student.lastLoginAt.toDate() : student.lastLoginAt).toLocaleDateString('vi-VN') : 'Chưa có dữ liệu'}
                     </p>
                   </div>
                 </div>
@@ -217,7 +217,7 @@ export function StudentDetail() {
                         </span>
                       </div>
                       <p className="text-[10px] text-gray-500 font-bold">
-                        {result.completedAt.toDate().toLocaleDateString('vi-VN')} • Đúng {result.score}/{result.totalQuestions}
+                        {new Date(typeof result.completedAt.toDate === 'function' ? result.completedAt.toDate() : result.completedAt).toLocaleDateString('vi-VN')} • Đúng {result.score}/{result.totalQuestions}
                       </p>
                     </div>
                   ))

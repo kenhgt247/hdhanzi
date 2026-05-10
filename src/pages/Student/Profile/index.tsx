@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { LogOut, User, Mail, Award, Target, Mic, PenTool, ChevronRight, BookOpen, Clock, Check, Edit2, Zap, LogIn, AlertCircle, BookA, FileText } from 'lucide-react';
+import { LogOut, User, Mail, Award, Target, Mic, PenTool, ChevronRight, BookOpen, Clock, Check, Edit2, Zap, LogIn, AlertCircle, BookA, FileText, Shield } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useStudyProgress } from '../../../contexts/StudyProgressContext';
 import { NavLink, useNavigate } from 'react-router-dom';
@@ -281,7 +281,27 @@ export function Profile() {
       </div>
 
       {/* Account Settings */}
-      <div className="mx-4 p-2">
+      <div className="mx-4 p-2 space-y-2">
+        {user?.role === 'admin' && (
+          <button
+            onClick={() => navigate('/admin')}
+            className="flex w-full items-center gap-4 rounded-2xl px-6 py-4 text-left text-white bg-slate-900 border border-slate-800 font-bold hover:bg-slate-800 transition-all active:scale-[0.98]"
+          >
+            <Shield className="h-5 w-5 text-indigo-400" />
+            <span>Chuyển đến Admin Gateway</span>
+          </button>
+        )}
+        
+        {user?.role === 'teacher' && (
+          <button
+            onClick={() => navigate('/teacher')}
+            className="flex w-full items-center gap-4 rounded-2xl px-6 py-4 text-left text-white bg-slate-900 border border-slate-800 font-bold hover:bg-slate-800 transition-all active:scale-[0.98]"
+          >
+            <BookOpen className="h-5 w-5 text-blue-400" />
+            <span>Chuyển đến Teacher Portal</span>
+          </button>
+        )}
+
         {user?.id === 'guest' ? (
           <button
             onClick={() => navigate('/login')}

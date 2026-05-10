@@ -24,6 +24,13 @@ export function AdminDashboard() {
     fetchDashboardData();
   }, []);
 
+  const getLoginTime = (lastLoginAt: any) => {
+    if (!lastLoginAt) return 0;
+    if (typeof lastLoginAt.toDate === 'function') return lastLoginAt.toDate().getTime();
+    if (lastLoginAt instanceof Date) return lastLoginAt.getTime();
+    return new Date(lastLoginAt).getTime();
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -34,7 +41,7 @@ export function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      <header className="flex justify-between items-start">
+      <header className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-start">
         <div>
           <h1 className="text-3xl font-black text-gray-900">Admin Dashboard</h1>
           <p className="text-gray-500 font-medium">Hệ thống quản lý HD Chinese.</p>
@@ -135,7 +142,7 @@ export function AdminDashboard() {
                   </div>
                   <div className="flex items-center gap-4">
                      <div className="text-right">
-                       <p className="text-xs font-bold text-rose-500">Nghỉ {Math.floor((Date.now() - (s.lastLoginAt?.toDate?.() || 0)) / (1000 * 60 * 60 * 24))} ngày</p>
+                       <p className="text-xs font-bold text-rose-500">Nghỉ {Math.floor((Date.now() - getLoginTime(s.lastLoginAt)) / (1000 * 60 * 60 * 24))} ngày</p>
                      </div>
                      <ChevronRight className="w-5 h-5 text-gray-300 group-hover:translate-x-1 transition-transform" />
                   </div>

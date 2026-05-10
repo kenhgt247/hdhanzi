@@ -188,7 +188,7 @@ export function AdminVocabulary() {
 
       <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-left border-collapse hidden md:table">
              <thead className="bg-gray-50/50 border-b">
                <tr>
                  <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Hán tự</th>
@@ -230,6 +230,40 @@ export function AdminVocabulary() {
                ))}
              </tbody>
           </table>
+          <div className="md:hidden divide-y divide-gray-100">
+            {loading ? (
+              <div className="p-6 text-center text-gray-500">Đang tải...</div>
+            ) : paginatedVocabs.map((v, i) => (
+              <div key={v.id || i} className="p-4 bg-white hover:bg-gray-50 transition">
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex items-center gap-4">
+                    <div className="text-4xl font-serif font-black text-gray-900">{v.traditional}</div>
+                    <div>
+                      <div className="font-bold text-gray-600">{v.pinyin}</div>
+                      <span className={cn(
+                        "mt-1 inline-block px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-tighter",
+                        v.level.startsWith('A') ? "bg-blue-50 text-blue-600" : "bg-purple-50 text-purple-600"
+                      )}>
+                        {v.level}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button onClick={() => setEditingVocab(v)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-400">
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => handleDelete(v.id)} className="p-2 hover:bg-red-50 rounded-lg transition-colors text-red-400">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+                <div className="text-sm text-gray-700">
+                  <span className="text-gray-400 font-medium mr-2">Ý nghĩa:</span>
+                  {v.vietnamese}
+                </div>
+              </div>
+            ))}
+          </div>
           {!loading && paginatedVocabs.length === 0 && (
             <div className="py-20 text-center">
               <BookOpen className="w-16 h-16 text-gray-200 mx-auto mb-4" />

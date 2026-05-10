@@ -107,7 +107,7 @@ export function AdminMockTests() {
           <h1 className="text-3xl font-black text-gray-900">Quản lý Đề thi Mock</h1>
           <p className="text-gray-500 font-medium">Thiết lập bộ đề thi thử TOCFL cho các trình độ A1, A2, B1.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <button 
             onClick={() => setShowAICreator(!showAICreator)}
             className={cn(

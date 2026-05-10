@@ -159,7 +159,7 @@ export function AdminLessons() {
 
       <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-left border-collapse hidden md:table">
              <thead className="bg-gray-50/50 border-b">
                <tr>
                  <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Tên bài học</th>
@@ -171,8 +171,6 @@ export function AdminLessons() {
              <tbody className="divide-y divide-gray-50">
                {loading ? (
                  <tr><td colSpan={4} className="p-6 text-center text-gray-500">Đang tải...</td></tr>
-               ) : paginatedLessons.length === 0 ? (
-                 <tr><td colSpan={4} className="p-6 text-center text-gray-500">Chưa có bài học nào.</td></tr>
                ) : paginatedLessons.map((lesson: Lesson) => (
                  <tr key={lesson.id} className="hover:bg-blue-50/30 transition-colors">
                    <td className="px-6 py-4">
@@ -208,6 +206,49 @@ export function AdminLessons() {
                ))}
              </tbody>
           </table>
+          <div className="md:hidden divide-y divide-gray-100">
+            {loading ? (
+              <div className="p-6 text-center text-gray-500">Đang tải...</div>
+            ) : paginatedLessons.map((lesson: Lesson) => (
+              <div key={lesson.id} className="p-4 bg-white hover:bg-gray-50 transition">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-50 rounded-xl shrink-0">
+                      <BookOpen className="w-6 h-6 text-blue-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-gray-900 leading-tight">{lesson.title}</h3>
+                      <p className="text-xs text-gray-500 line-clamp-1 mt-1">{lesson.topic}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between text-xs mt-3">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-1 rounded text-[10px] font-black bg-emerald-50 text-emerald-600">
+                      {lesson.stage}
+                    </span>
+                    <span className="text-gray-500 font-medium">
+                      {lesson.vocabulary?.length || 0} từ vựng
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button onClick={() => setEditingLesson(lesson)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-400">
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => handleDelete(lesson.id)} className="p-2 hover:bg-red-50 rounded-lg transition-colors text-red-400">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          {!loading && paginatedLessons.length === 0 && (
+            <div className="py-20 text-center">
+              <BookOpen className="w-16 h-16 text-gray-200 mx-auto mb-4" />
+              <div className="text-gray-500 font-medium">Chưa có bài học nào.</div>
+            </div>
+          )}
         </div>
       </div>
 

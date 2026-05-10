@@ -107,7 +107,7 @@ export function AdminDialogues() {
           <h1 className="text-3xl font-black text-gray-900">Quản lý Hội thoại</h1>
           <p className="text-gray-500 font-medium">Hệ thống các tình huống hội thoại và luyện phỏng vấn.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <button 
             onClick={() => setShowAICreator(!showAICreator)}
             className={cn(

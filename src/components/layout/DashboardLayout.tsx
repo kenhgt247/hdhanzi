@@ -39,7 +39,7 @@ export function DashboardLayout({ role }: { role: Role }) {
 
       {/* Sidebar */}
       <aside className={cn(
-        "bg-slate-900 text-white shadow-xl flex-col shrink-0 w-64 md:flex absolute md:relative z-40 h-full transition-transform duration-300 ease-in-out left-0 top-0",
+        "bg-slate-900 text-white shadow-xl flex-col shrink-0 w-64 md:flex fixed md:relative z-40 h-[100dvh] md:h-full transition-transform duration-300 ease-in-out left-0 top-0",
         isMobileMenuOpen ? "flex translate-x-0" : "hidden md:flex md:translate-x-0 -translate-x-full"
       )}>
         <div className="hidden md:flex h-16 items-center px-6 shrink-0">

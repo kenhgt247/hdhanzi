@@ -23,13 +23,20 @@ export function AdminStudents() {
     fetchStudents();
   }, []);
 
+  const getLoginTime = (lastLoginAt: any) => {
+    if (!lastLoginAt) return 0;
+    if (typeof lastLoginAt.toDate === 'function') return lastLoginAt.toDate().getTime();
+    if (lastLoginAt instanceof Date) return lastLoginAt.getTime();
+    return new Date(lastLoginAt).getTime();
+  };
+
   const filteredStudents = students.filter(st => {
     const matchesSearch = st.name.toLowerCase().includes(searchTerm.toLowerCase()) || st.email.toLowerCase().includes(searchTerm.toLowerCase());
     if (!matchesSearch) return false;
     
     if (filter === 'inactive') {
       if (!st.lastLoginAt) return true;
-      const days = Math.floor((Date.now() - st.lastLoginAt.toDate().getTime()) / (1000 * 60 * 60 * 24));
+      const days = Math.floor((Date.now() - getLoginTime(st.lastLoginAt)) / (1000 * 60 * 60 * 24));
       return days > 3;
     }
     return true;
@@ -53,7 +60,7 @@ export function AdminStudents() {
       </header>
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between bg-white p-4 rounded-xl shadow-sm border">
-        <div className="relative max-w-sm flex-1">
+        <div className="relative flex-1 w-full sm:max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
           <input
             type="text"
@@ -63,10 +70,10 @@ export function AdminStudents() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <div className="flex items-center gap-2">
-          <Filter className="h-5 w-5 text-gray-400" />
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Filter className="h-5 w-5 text-gray-400 shrink-0" />
           <select 
-            className="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+            className="w-full sm:w-auto border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
           >
@@ -78,7 +85,7 @@ export function AdminStudents() {
 
       <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-gray-600">
+          <table className="w-full text-left text-sm text-gray-600 hidden md:table">
             <thead className="bg-gray-50 text-gray-900 border-b">
               <tr>
                 <th className="px-6 py-4 font-medium uppercase text-[10px] tracking-widest text-gray-400">Học viên</th>
@@ -90,7 +97,7 @@ export function AdminStudents() {
             </thead>
             <tbody className="divide-y">
               {filteredStudents.map((st) => {
-                const daysInactive = st.lastLoginAt ? Math.floor((Date.now() - st.lastLoginAt.toDate().getTime()) / (1000 * 60 * 60 * 24)) : -1;
+                const daysInactive = st.lastLoginAt ? Math.floor((Date.now() - getLoginTime(st.lastLoginAt)) / (1000 * 60 * 60 * 24)) : -1;
                 
                 return (
                   <tr key={st.id} className="hover:bg-gray-50 transition">
@@ -151,6 +158,61 @@ export function AdminStudents() {
               )}
             </tbody>
           </table>
+          
+          <div className="md:hidden divide-y divide-gray-100">
+             {filteredStudents.map((st) => {
+                const daysInactive = st.lastLoginAt ? Math.floor((Date.now() - getLoginTime(st.lastLoginAt)) / (1000 * 60 * 60 * 24)) : -1;
+                return (
+                  <div key={st.id} className="p-4 hover:bg-gray-50 transition" onClick={() => navigate(`/admin/students/${st.id}`)}>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 font-bold text-sm uppercase">
+                          {st.name[0]}
+                        </div>
+                        <div>
+                          <div className="font-bold text-gray-900">{st.name}</div>
+                          <div className="text-xs text-gray-500">{st.email}</div>
+                        </div>
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <div className="flex items-center gap-4 text-xs">
+                      <div>
+                        <span className="text-gray-500">Trình độ: </span>
+                        <span className="font-bold text-gray-900 uppercase">{st.currentLevel || 'N/A'}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Điểm: </span>
+                        <span className="font-bold text-blue-600">{st.totalPoints || 0}</span>
+                      </div>
+                    </div>
+                    <div className="mt-3">
+                        {daysInactive > 3 && (
+                          <span className="inline-flex w-fit items-center gap-1 rounded bg-red-50 px-2 py-1 text-[10px] font-black text-red-600 uppercase">
+                            <AlertTriangle className="h-3 w-3" />
+                            Nghỉ {daysInactive} ngày
+                          </span>
+                        )}
+                        {daysInactive === -1 && (
+                          <span className="inline-flex w-fit items-center gap-1 rounded bg-gray-100 px-2 py-1 text-[10px] font-black text-gray-600 uppercase">
+                            Chưa học
+                          </span>
+                        )}
+                        {daysInactive >= 0 && daysInactive <= 3 && (
+                          <span className="inline-flex w-fit items-center gap-1 rounded bg-emerald-50 px-2 py-1 text-[10px] font-black text-emerald-600 uppercase">
+                            Đang học
+                          </span>
+                        )}
+                    </div>
+                  </div>
+                );
+             })}
+             {filteredStudents.length === 0 && (
+                <div className="p-12 text-center text-gray-500">
+                  Không tìm thấy học viên nào phù hợp với điều kiện lọc.
+                </div>
+             )}
+          </div>
         </div>
       </div>
     </div>
