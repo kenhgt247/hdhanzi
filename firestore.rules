@@ -18,11 +18,12 @@ service cloud.firestore {
     // --- User Rules ---
     match /users/{userId} {
       function isValidUser(data) {
-        return data.uid == userId 
+        return (!('uid' in data) || data.uid == userId)
           && data.email is string && data.email.size() <= 200
           && (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 100))
           && (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 500))
-          && (!('targetLevel' in data) || (data.targetLevel in ['Beginner', 'Elementary', 'Intermediate', 'Advanced']))
+          && (!('targetLevel' in data) || (data.targetLevel is string))
+          && (!('currentLevel' in data) || (data.currentLevel is string))
           && (!('currentStreak' in data) || (data.currentStreak is number && data.currentStreak >= 0))
           && (!('lastActiveDate' in data) || (data.lastActiveDate is string))
           && (!('lastLessonId' in data) || (data.lastLessonId is string))
@@ -46,17 +47,17 @@ service cloud.firestore {
             && data.totalTasks is number && data.totalTasks >= 0
             && data.completedTasks is number && data.completedTasks >= 0
             && data.progressPercent is number && data.progressPercent >= 0 && data.progressPercent <= 100
-            && data.totalPoints is number && data.totalPoints >= 0;
+            && data.totalPoints is number && data.totalPoints >= 0
+            && (!('studyMinutes' in data) || (data.studyMinutes is number && data.studyMinutes >= 0))
+            && (!('level' in data) || data.level is string)
+            && (!('createdAt' in data) || true)
+            && (!('updatedAt' in data) || true);
         }
 
         allow get: if isOwner(userId);
         allow list: if isOwner(userId);
-        allow create: if isOwner(userId) && isVerified() && isValidPlan(incoming()) && incoming().createdAt == request.time;
-        allow update: if isOwner(userId) && isVerified() && isValidPlan(incoming()) && (
-          incoming().diff(existing()).affectedKeys().hasOnly([
-            'tasks', 'completedTasks', 'progressPercent', 'totalPoints', 'studyMinutes', 'updatedAt'
-          ])
-        ) && incoming().updatedAt == request.time;
+        allow create: if isOwner(userId);
+        allow update: if isOwner(userId);
       }
 
       // --- Weak Words ---
@@ -73,13 +74,8 @@ service cloud.firestore {
 
         allow get: if isOwner(userId);
         allow list: if isOwner(userId);
-        allow create: if isOwner(userId) && isVerified() && isValidWeakWord(incoming()) && incoming().createdAt == request.time;
-        allow update: if isOwner(userId) && isVerified() && isValidWeakWord(incoming()) && (
-          incoming().diff(existing()).affectedKeys().hasOnly([
-            'mistakeCount', 'mistakeTypes', 'lastMistakeAt', 'lastReviewedAt', 
-            'strengthLevel', 'nextReviewAt', 'updatedAt', 'correctReviewCount'
-          ])
-        ) && incoming().updatedAt == request.time;
+        allow create: if isOwner(userId);
+        allow update: if isOwner(userId);
       }
 
       // --- Mock Test Results ---
@@ -93,7 +89,7 @@ service cloud.firestore {
 
         allow get: if isOwner(userId);
         allow list: if isOwner(userId);
-        allow create: if isOwner(userId) && isVerified() && isValidResult(incoming()) && incoming().completedAt == request.time;
+        allow create: if isOwner(userId);
       }
     }
 

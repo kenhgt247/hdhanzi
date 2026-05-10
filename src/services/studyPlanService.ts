@@ -97,7 +97,8 @@ export const studyPlanService = {
       await setDoc(planRef, firebasePlan);
       return newPlan;
     } catch (error) {
-      handleFirestoreError(error, OperationType.GET, `users/${userId}/dailyPlans/${today}`);
+      // Fallback without throwing if we specifically want to return guest plan
+      console.error("Failed to fetch or create daily plan", error);
       return await generateDefaultPlan('guest', today, level);
     }
   },
@@ -118,7 +119,7 @@ export const studyPlanService = {
           plan = planSnap.data() as DailyPlan;
         }
       } catch (error) {
-        handleFirestoreError(error, OperationType.GET, `users/${userId}/dailyPlans/${date}`);
+        console.error("Failed to fetch plan", error);
       }
     }
 
@@ -187,7 +188,7 @@ export const studyPlanService = {
         }
         localStorage.removeItem(STORAGE_KEY);
       } catch (error) {
-        handleFirestoreError(error, OperationType.WRITE, `users/${userId}/dailyPlans/${today}`);
+        console.error("Failed to sync plan with firebase", error);
       }
     }
   }

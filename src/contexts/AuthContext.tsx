@@ -80,7 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Sync study plan
           studyPlanService.syncLocalPlanWithFirebase(user.uid, userData.targetLevel || 'Beginner');
         } catch (error) {
-          handleFirestoreError(error, OperationType.GET, 'users');
+          handleFirestoreError(error, OperationType.CREATE, `users/${user.uid}`);
           setUser(null);
         }
       } else {
