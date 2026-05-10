@@ -134,7 +134,8 @@ export function AICreator({ type = 'vocabulary', onSave, onClose }: AICreatorPro
     }
     // Default lessons
     return {
-      prompt: `Extract lessons or grammar notes. Provide a JSON array of objects with title, topic, duration, and stage.`,
+      prompt: `Extract lessons or grammar notes. Provide a JSON array of objects.
+Each object represents a lesson with title, topic, duration, stage, sentencePatterns (array of {traditional, pinyin, zhuyin, vietnamese, usage}), and optionally grammar (array of GrammarNote with title, explanation, structure, and examples [{traditional, pinyin, vietnamese}]).`,
       schema: {
         type: Type.ARRAY,
         items: {
@@ -143,7 +144,42 @@ export function AICreator({ type = 'vocabulary', onSave, onClose }: AICreatorPro
             title: { type: Type.STRING },
             topic: { type: Type.STRING },
             stage: { type: Type.STRING },
-            duration: { type: Type.STRING }
+            duration: { type: Type.STRING },
+            sentencePatterns: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  traditional: { type: Type.STRING },
+                  pinyin: { type: Type.STRING },
+                  zhuyin: { type: Type.STRING },
+                  vietnamese: { type: Type.STRING },
+                  usage: { type: Type.STRING }
+                }
+              }
+            },
+            grammar: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  title: { type: Type.STRING },
+                  explanation: { type: Type.STRING },
+                  structure: { type: Type.STRING },
+                  examples: {
+                    type: Type.ARRAY,
+                    items: {
+                      type: Type.OBJECT,
+                      properties: {
+                         traditional: { type: Type.STRING },
+                         pinyin: { type: Type.STRING },
+                         vietnamese: { type: Type.STRING }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           },
           required: ["title", "topic"]
         }

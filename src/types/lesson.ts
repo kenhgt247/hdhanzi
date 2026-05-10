@@ -8,11 +8,23 @@ export interface Lesson {
   objectives: string[];
   vocabulary: VocabularyItem[];
   sentencePatterns: SentencePattern[];
+  grammar?: GrammarNote[];
   listening: ListeningExercise;
   reading: ReadingExercise;
   speaking: SpeakingExercise;
   writing: WritingExercise;
   quiz: QuizQuestion[];
+}
+
+export interface GrammarNote {
+  title: string;
+  explanation: string;
+  structure: string;
+  examples: {
+    traditional: string;
+    pinyin: string;
+    vietnamese: string;
+  }[];
 }
 
 export interface VocabularyItem {

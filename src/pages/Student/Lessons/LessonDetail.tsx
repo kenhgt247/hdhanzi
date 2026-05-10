@@ -17,7 +17,7 @@ export function LessonDetail() {
   const location = useLocation();
   const { setLastLessonId } = useStudyProgress();
   const [lesson, setLesson] = useState<Lesson | null>(null);
-  const [activeTab, setActiveTab] = useState<'vocab' | 'writing' | 'grammar' | 'reading' | 'listening' | 'quiz'>('vocab');
+  const [activeTab, setActiveTab] = useState<'vocab' | 'writing' | 'patterns' | 'grammar' | 'reading' | 'listening' | 'quiz'>('vocab');
 
   // Scoring states
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -37,7 +37,7 @@ export function LessonDetail() {
         // Handle initial tab from query param
         const params = new URLSearchParams(location.search);
         const tabParam = params.get('tab');
-        if (tabParam && ['vocab', 'writing', 'grammar', 'reading', 'listening', 'quiz'].includes(tabParam)) {
+        if (tabParam && ['vocab', 'writing', 'patterns', 'grammar', 'reading', 'listening', 'quiz'].includes(tabParam)) {
           setActiveTab(tabParam as any);
         }
 
@@ -213,7 +213,8 @@ export function LessonDetail() {
   const tabs = [
     { id: 'vocab', name: 'Từ vựng', icon: BookOpen },
     { id: 'writing', name: 'Luyện viết', icon: PenTool },
-    { id: 'grammar', name: 'Mẫu câu', icon: PenTool },
+    { id: 'patterns', name: 'Mẫu câu', icon: PenTool },
+    { id: 'grammar', name: 'Ngữ pháp', icon: BookOpen },
     { id: 'listening', name: 'Luyện nghe', icon: Headphones },
     { id: 'reading', name: 'Luyện đọc', icon: BookOpen },
     { id: 'quiz', name: 'Kiểm tra', icon: CheckCircle },
@@ -369,7 +370,7 @@ export function LessonDetail() {
                 <ArrowLeft className="h-4 w-4" /> Quay lại
               </button>
               <button 
-                onClick={() => setActiveTab('grammar')}
+                onClick={() => setActiveTab('patterns')}
                 className="w-full sm:w-auto flex items-center justify-center gap-2 bg-blue-600 text-white px-8 py-4 sm:py-3 rounded-2xl sm:rounded-xl font-bold shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all active:scale-95"
               >
                 Tiếp theo: Mẫu câu <ChevronRight className="h-4 w-4" />
@@ -379,7 +380,7 @@ export function LessonDetail() {
         )}
 
         {/* TAB MẪU CÂU */}
-        {activeTab === 'grammar' && (
+        {activeTab === 'patterns' && (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <h2 className="text-xl font-bold text-gray-900 border-l-4 border-blue-500 pl-3">Mẫu câu trọng tâm</h2>
             <div className="space-y-4">
@@ -405,6 +406,76 @@ export function LessonDetail() {
             <div className="flex flex-col sm:flex-row justify-between gap-3 mt-12">
               <button 
                 onClick={() => setActiveTab('writing')}
+                className="w-full sm:w-auto flex items-center justify-center gap-2 text-gray-500 bg-gray-50 hover:bg-gray-100 px-6 py-4 sm:py-3 rounded-2xl sm:rounded-xl font-bold transition-all active:scale-95"
+              >
+                <ArrowLeft className="h-4 w-4" /> Quay lại
+              </button>
+              <button 
+                onClick={() => setActiveTab('grammar')}
+                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-blue-600 text-white px-8 py-4 sm:py-3 rounded-2xl sm:rounded-xl font-bold shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all active:scale-95"
+              >
+                Tiếp theo: Ngữ pháp <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* TAB NGỮ PHÁP */}
+        {activeTab === 'grammar' && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <h2 className="text-xl font-bold text-gray-900 border-l-4 border-blue-500 pl-3">Ngữ pháp</h2>
+            {(!lesson.grammar || lesson.grammar.length === 0) ? (
+              <div className="p-8 text-center bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                <p className="text-gray-500 font-medium">Chưa có nội dung ngữ pháp cho bài này.</p>
+              </div>
+            ) : (
+              <div className="space-y-8">
+                {lesson.grammar.map((g, idx) => (
+                  <div key={idx} className="rounded-2xl border bg-white p-6 shadow-sm">
+                    <h3 className="text-2xl font-bold text-blue-600 mb-4">{g.title}</h3>
+                    
+                    <div className="mb-6">
+                      <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">Cấu trúc</h4>
+                      <div className="bg-blue-50 text-blue-700 font-medium px-4 py-3 rounded-lg border border-blue-100">
+                        {g.structure}
+                      </div>
+                    </div>
+                    
+                    <div className="mb-6">
+                      <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">Giải thích</h4>
+                      <p className="text-gray-800 leading-relaxed font-medium">{g.explanation}</p>
+                    </div>
+
+                    {g.examples && g.examples.length > 0 && (
+                      <div>
+                        <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">Ví dụ</h4>
+                        <div className="space-y-3">
+                          {g.examples.map((ex, i) => (
+                            <div key={i} className="bg-gray-50 p-4 rounded-xl border border-gray-100 flex items-start gap-3">
+                              <button 
+                                onClick={() => playAudio(ex.traditional)}
+                                className="mt-0.5 flex-shrink-0 text-blue-500 hover:text-blue-700"
+                              >
+                                <Volume2 className="h-5 w-5" />
+                              </button>
+                              <div>
+                                <p className="text-lg font-bold text-gray-900 mb-1">{ex.traditional}</p>
+                                <p className="text-sm text-gray-500 font-mono mb-2">{ex.pinyin}</p>
+                                <p className="text-gray-700">{ex.vietnamese}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            <div className="flex flex-col sm:flex-row justify-between gap-3 mt-12">
+              <button 
+                onClick={() => setActiveTab('patterns')}
                 className="w-full sm:w-auto flex items-center justify-center gap-2 text-gray-500 bg-gray-50 hover:bg-gray-100 px-6 py-4 sm:py-3 rounded-2xl sm:rounded-xl font-bold transition-all active:scale-95"
               >
                 <ArrowLeft className="h-4 w-4" /> Quay lại

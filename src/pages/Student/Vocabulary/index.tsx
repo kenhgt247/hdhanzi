@@ -84,56 +84,56 @@ export function Vocabulary() {
     return (
       <div className="mx-auto max-w-3xl space-y-6">
         <header className="flex flex-col sm:flex-row items-center justify-between bg-white p-4 rounded-2xl shadow-sm border border-gray-100 gap-4">
-           <button onClick={() => setIsPracticing(false)} className="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors font-medium self-start sm:self-center">
+           <button onClick={() => setIsPracticing(false)} className="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors font-medium self-start sm:self-center flex-shrink-0">
               <ArrowLeft className="w-5 h-5" /> Trở về
            </button>
            
-           <div className="flex w-full sm:w-auto bg-gray-100 p-1 rounded-xl overflow-x-auto scrollbar-hide">
+           <div className="flex w-full items-center bg-gray-100 p-1.5 rounded-xl overflow-x-auto scrollbar-hide gap-1 flex-nowrap">
               <button 
                 onClick={() => setPracticeMode('flashcard')} 
-                className={cn("whitespace-nowrap px-3 py-1.5 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5", practiceMode === 'flashcard' ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700")}
+                className={cn("whitespace-nowrap flex-shrink-0 px-3 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5", practiceMode === 'flashcard' ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700")}
               >
                 <BookOpen className="w-4 h-4"/> Đọc nhớ
               </button>
               <button 
                 onClick={() => setPracticeMode('quiz')} 
-                className={cn("whitespace-nowrap px-3 py-1.5 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5", practiceMode === 'quiz' ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700")}
+                className={cn("whitespace-nowrap flex-shrink-0 px-3 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5", practiceMode === 'quiz' ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700")}
               >
                 <Check className="w-4 h-4"/> Trắc nghiệm
               </button>
               <button 
                 onClick={() => setPracticeMode('speaking')} 
-                className={cn("whitespace-nowrap px-3 py-1.5 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5", practiceMode === 'speaking' ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700")}
+                className={cn("whitespace-nowrap flex-shrink-0 px-3 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5", practiceMode === 'speaking' ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700")}
               >
                 <Mic className="w-4 h-4"/> Nói
               </button>
               <button 
                 onClick={() => setPracticeMode('listening')} 
-                className={cn("whitespace-nowrap px-3 py-1.5 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5", practiceMode === 'listening' ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700")}
+                className={cn("whitespace-nowrap flex-shrink-0 px-3 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5", practiceMode === 'listening' ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700")}
               >
                 <Volume2 className="w-4 h-4"/> Luyện nghe
               </button>
               <button 
                 onClick={() => setPracticeMode('listening_writing')} 
-                className={cn("whitespace-nowrap px-3 py-1.5 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5", practiceMode === 'listening_writing' ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700")}
+                className={cn("whitespace-nowrap flex-shrink-0 px-3 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5", practiceMode === 'listening_writing' ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700")}
               >
                 <Keyboard className="w-4 h-4"/> Nghe viết
               </button>
               <button 
                 onClick={() => setPracticeMode('conversation')} 
-                className={cn("whitespace-nowrap px-3 py-1.5 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5", practiceMode === 'conversation' ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700")}
+                className={cn("whitespace-nowrap flex-shrink-0 px-3 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5", practiceMode === 'conversation' ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700")}
               >
                 <Headphones className="w-4 h-4"/> Hội thoại
               </button>
               <button 
                 onClick={() => setPracticeMode('drawing')} 
-                className={cn("whitespace-nowrap px-3 py-1.5 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5", practiceMode === 'drawing' ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700")}
+                className={cn("whitespace-nowrap flex-shrink-0 px-3 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5", practiceMode === 'drawing' ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700")}
               >
                 <PenTool className="w-4 h-4"/> Viết chữ
               </button>
            </div>
            
-           <div className="font-semibold text-gray-600 bg-gray-50 px-3 py-1 rounded-lg text-sm whitespace-nowrap hidden sm:block">
+           <div className="font-semibold text-gray-600 bg-gray-50 px-3 py-2 rounded-lg text-sm whitespace-nowrap hidden sm:block flex-shrink-0">
              {currentIndex + 1} / {paginatedVocabs.length}
            </div>
         </header>
