@@ -102,7 +102,11 @@ Lưu ý:
       setLoading(false);
     } catch (err: any) {
       console.error("Gemini Error:", err);
-      setError("Không thể tạo bài tập lúc này. Vui lòng thử lại.");
+      if (err?.message?.includes('API key not valid') || err?.message?.includes('API_KEY_INVALID') || err?.message?.includes('API Key must be set')) {
+        setError("Lỗi cấu hình API Key. Vui lòng kiểm tra lại biến môi trường VITE_GEMINI_API_KEY trên Vercel.");
+      } else {
+        setError(`Lỗi: ${err?.message || "Không thể tạo bài tập lúc này. Vui lòng thử lại."}`);
+      }
       setLoading(false);
     }
   };
