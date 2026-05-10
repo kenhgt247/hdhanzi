@@ -10,7 +10,8 @@ import {
   getDoc,
   updateDoc,
   deleteDoc,
-  writeBatch
+  writeBatch,
+  setDoc
 } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { MockTest, MockTestResult, WeakWord } from '../types/study';
@@ -118,6 +119,49 @@ export const adminService = {
     }
   },
 
+  async getVocabularies() {
+    try {
+      const snapshot = await getDocs(collection(db, 'vocabulary'));
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Vocab));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.LIST, 'vocabulary');
+      return [];
+    }
+  },
+
+  async addVocabulary(vocab: Partial<Vocab>) {
+    try {
+      const docRef = doc(collection(db, 'vocabulary'));
+      await setDoc(docRef, { ...vocab, id: docRef.id, createdAt: Timestamp.now(), status: vocab.status || 'new' });
+      return docRef.id;
+    } catch (error) {
+      handleFirestoreError(error, OperationType.CREATE, 'vocabulary');
+      return null;
+    }
+  },
+
+  async updateVocabulary(vocabId: string, updates: Partial<Vocab>) {
+    try {
+      const docRef = doc(db, 'vocabulary', vocabId);
+      await updateDoc(docRef, { ...updates, updatedAt: Timestamp.now() });
+      return true;
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `vocabulary/${vocabId}`);
+      return false;
+    }
+  },
+
+  async deleteVocabulary(vocabId: string) {
+    try {
+      const docRef = doc(db, 'vocabulary', vocabId);
+      await deleteDoc(docRef);
+      return true;
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `vocabulary/${vocabId}`);
+      return false;
+    }
+  },
+
   async importVocabularyBatch(vocabularies: Partial<Vocab>[]) {
     try {
       const batch = writeBatch(db);
@@ -138,6 +182,49 @@ export const adminService = {
     }
   },
 
+  async getLessons() {
+    try {
+      const snapshot = await getDocs(collection(db, 'lessons'));
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Lesson));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.LIST, 'lessons');
+      return [];
+    }
+  },
+
+  async addLesson(lesson: Omit<Lesson, 'id'>) {
+    try {
+      const docRef = doc(collection(db, 'lessons'));
+      await setDoc(docRef, { ...lesson, id: docRef.id, createdAt: Timestamp.now() });
+      return docRef.id;
+    } catch (error) {
+      handleFirestoreError(error, OperationType.CREATE, 'lessons');
+      return null;
+    }
+  },
+
+  async updateLesson(lessonId: string, updates: Partial<Lesson>) {
+    try {
+      const docRef = doc(db, 'lessons', lessonId);
+      await updateDoc(docRef, { ...updates, updatedAt: Timestamp.now() });
+      return true;
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `lessons/${lessonId}`);
+      return false;
+    }
+  },
+
+  async deleteLesson(lessonId: string) {
+    try {
+      const docRef = doc(db, 'lessons', lessonId);
+      await deleteDoc(docRef);
+      return true;
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `lessons/${lessonId}`);
+      return false;
+    }
+  },
+
   async importLessonsBatch(lessons: Partial<Lesson>[]) {
     try {
       const batch = writeBatch(db);
@@ -154,6 +241,92 @@ export const adminService = {
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, 'lessons');
       return { success: false, error };
+    }
+  },
+
+  async getDialogues() {
+    try {
+      const snapshot = await getDocs(collection(db, 'dialogues'));
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.LIST, 'dialogues');
+      return [];
+    }
+  },
+
+  async addDialogue(dialogue: any) {
+    try {
+      const docRef = doc(collection(db, 'dialogues'));
+      await setDoc(docRef, { ...dialogue, id: docRef.id, createdAt: Timestamp.now() });
+      return docRef.id;
+    } catch (error) {
+      handleFirestoreError(error, OperationType.CREATE, 'dialogues');
+      return null;
+    }
+  },
+
+  async updateDialogue(dialogueId: string, updates: any) {
+    try {
+      const docRef = doc(db, 'dialogues', dialogueId);
+      await updateDoc(docRef, { ...updates, updatedAt: Timestamp.now() });
+      return true;
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `dialogues/${dialogueId}`);
+      return false;
+    }
+  },
+
+  async deleteDialogue(dialogueId: string) {
+    try {
+      const docRef = doc(db, 'dialogues', dialogueId);
+      await deleteDoc(docRef);
+      return true;
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `dialogues/${dialogueId}`);
+      return false;
+    }
+  },
+
+  async getMockTests() {
+    try {
+      const snapshot = await getDocs(collection(db, 'mockTests'));
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MockTest));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.LIST, 'mockTests');
+      return [];
+    }
+  },
+
+  async addMockTest(test: any) {
+    try {
+      const docRef = doc(collection(db, 'mockTests'));
+      await setDoc(docRef, { ...test, id: docRef.id, createdAt: Timestamp.now() });
+      return docRef.id;
+    } catch (error) {
+      handleFirestoreError(error, OperationType.CREATE, 'mockTests');
+      return null;
+    }
+  },
+
+  async updateMockTest(testId: string, updates: any) {
+    try {
+      const docRef = doc(db, 'mockTests', testId);
+      await updateDoc(docRef, { ...updates, updatedAt: Timestamp.now() });
+      return true;
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `mockTests/${testId}`);
+      return false;
+    }
+  },
+
+  async deleteMockTest(testId: string) {
+    try {
+      const docRef = doc(db, 'mockTests', testId);
+      await deleteDoc(docRef);
+      return true;
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `mockTests/${testId}`);
+      return false;
     }
   },
 

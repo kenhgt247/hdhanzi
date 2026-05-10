@@ -43,6 +43,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!auth) {
+      console.warn("Firebase Auth is not initialized. Running in guest mode without a backend.");
+      setLoading(false);
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setFirebaseUser(user);
       if (user) {
@@ -87,15 +93,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signInWithGoogle = async () => {
+    if (!auth) throw new Error("Firebase Auth is not initialized.");
     const provider = new GoogleAuthProvider();
     await signInWithPopup(auth, provider);
   };
 
   const signInWithEmail = async (email: string, pass: string) => {
+    if (!auth) throw new Error("Firebase Auth is not initialized.");
     await signInWithEmailAndPassword(auth, email, pass);
   };
 
   const signUpWithEmail = async (email: string, pass: string, name: string) => {
+    if (!auth) throw new Error("Firebase Auth is not initialized.");
     const cred = await createUserWithEmailAndPassword(auth, email, pass);
     // Setting display name in firebase is optional, we will save to firestore in the auth change listener.
     // However, onAuthStateChanged will trigger before we can set the name nicely if we rely on it.
@@ -116,6 +125,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
+    if (!auth) return;
     await firebaseSignOut(auth);
   };
 

@@ -1,17 +1,99 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Filter, Edit2, Trash2, BookOpen, Upload, Sparkles } from 'lucide-react';
+import { Search, Plus, Filter, Edit2, Trash2, BookOpen, Upload, Sparkles, X } from 'lucide-react';
 import { tocflVocabularies, Vocab } from '../../../data/vocabulary';
 import { cn } from '../../../lib/utils';
 import { DataImporter } from '../../../components/Admin/DataImporter';
 import { AICreator } from '../../../components/Admin/AICreator';
 import { adminService } from '../../../services/adminService';
 
+function EditVocabModal({ vocab, onClose, onSave }: { vocab?: Vocab | null, onClose: () => void, onSave: (v: any) => void }) {
+  const [formData, setFormData] = useState({
+    traditional: vocab?.traditional || '',
+    pinyin: vocab?.pinyin || '',
+    vietnamese: vocab?.vietnamese || '',
+    level: vocab?.level || 'A1'
+  });
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-3xl p-6 w-full max-w-lg">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-bold">{vocab ? 'Sửa từ vựng' : 'Thêm từ vựng mới'}</h2>
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full"><X className="w-5 h-5"/></button>
+        </div>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Hán tự phồn thể</label>
+            <input type="text" value={formData.traditional} onChange={e => setFormData({...formData, traditional: e.target.value})} className="w-full px-4 py-2 border rounded-xl" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Pinyin</label>
+            <input type="text" value={formData.pinyin} onChange={e => setFormData({...formData, pinyin: e.target.value})} className="w-full px-4 py-2 border rounded-xl" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Nghĩa tiếng Việt</label>
+            <input type="text" value={formData.vietnamese} onChange={e => setFormData({...formData, vietnamese: e.target.value})} className="w-full px-4 py-2 border rounded-xl" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Trình độ (TOCFL)</label>
+            <select value={formData.level} onChange={e => setFormData({...formData, level: e.target.value})} className="w-full px-4 py-2 border rounded-xl">
+              <option value="A1">A1</option><option value="A2">A2</option><option value="B1">B1</option>
+              <option value="B2">B2</option><option value="C1">C1</option>
+            </select>
+          </div>
+        </div>
+        <div className="flex justify-end gap-3 mt-8">
+          <button onClick={onClose} className="px-6 py-2 text-gray-600 font-medium hover:bg-gray-50 rounded-xl">Hủy</button>
+          <button onClick={() => onSave(formData)} className="px-6 py-2 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700">Lưu thay đổi</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function AdminVocabulary() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLevel, setSelectedLevel] = useState<string>('All');
-  const [vocabList, setVocabList] = useState<Vocab[]>(tocflVocabularies);
+  const [vocabList, setVocabList] = useState<Vocab[]>([]);
   const [showImporter, setShowImporter] = useState(false);
   const [showAICreator, setShowAICreator] = useState(false);
+  const [editingVocab, setEditingVocab] = useState<Vocab | null | undefined>(undefined);
+  const [loading, setLoading] = useState(true);
+
+  const fetchVocabularies = async () => {
+    setLoading(true);
+    const data = await adminService.getVocabularies();
+    // Combine with seed data to have something if firestore is empty, or just use firestore
+    // We will just use firestore since this is admin. If they just set it up, they need to import.
+    // For convenience, if empty, we can show seed data.
+    setVocabList(data.length > 0 ? data : tocflVocabularies);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchVocabularies();
+  }, []);
+
+  const handleSave = async (formData: any) => {
+    if (editingVocab && editingVocab.id) {
+      await adminService.updateVocabulary(editingVocab.id, formData);
+    } else {
+      await adminService.addVocabulary(formData);
+    }
+    setEditingVocab(undefined);
+    fetchVocabularies();
+  };
+
+  const handleDelete = async (id?: string) => {
+    if (!id) {
+      alert("Không thể xóa từ vựng mẫu (chưa có ID). Hãy import dữ liệu vào Firestore trước.");
+      return;
+    }
+    if (window.confirm('Bạn có chắc muốn xóa từ này?')) {
+      await adminService.deleteVocabulary(id);
+      fetchVocabularies();
+    }
+  };
 
   const filteredVocabs = vocabList.filter(v => {
     const matchesSearch = v.traditional.includes(searchTerm) || 
@@ -43,7 +125,7 @@ export function AdminVocabulary() {
             <Sparkles className="w-5 h-5" />
             AI Creator
           </button>
-          <button className="bg-blue-600 text-white px-6 py-3 rounded-2xl font-bold shadow-lg shadow-blue-100 flex items-center gap-2 hover:bg-blue-700 transition-colors">
+          <button onClick={() => setEditingVocab(null)} className="bg-blue-600 text-white px-6 py-3 rounded-2xl font-bold shadow-lg shadow-blue-100 flex items-center gap-2 hover:bg-blue-700 transition-colors">
             <Plus className="w-5 h-5" />
             Thêm thủ công
           </button>
@@ -52,8 +134,11 @@ export function AdminVocabulary() {
 
       {showAICreator && (
         <AICreator 
+          type="vocabulary"
           onSave={async (v) => {
-            await adminService.importVocabularyBatch([v]);
+            const arr = Array.isArray(v) ? v : [v];
+            await adminService.importVocabularyBatch(arr);
+            fetchVocabularies();
           }} 
           onClose={() => setShowAICreator(false)} 
         />
@@ -100,8 +185,10 @@ export function AdminVocabulary() {
                </tr>
              </thead>
              <tbody className="divide-y divide-gray-50">
-               {filteredVocabs.slice(0, 50).map((v, i) => (
-                 <tr key={i} className="hover:bg-blue-50/30 transition-colors">
+               {loading ? (
+                 <tr><td colSpan={5} className="p-6 text-center text-gray-500">Đang tải...</td></tr>
+               ) : filteredVocabs.slice(0, 50).map((v, i) => (
+                 <tr key={v.id || i} className="hover:bg-blue-50/30 transition-colors">
                    <td className="px-6 py-4">
                      <span className="text-2xl font-serif font-black text-gray-900">{v.traditional}</span>
                    </td>
@@ -117,10 +204,10 @@ export function AdminVocabulary() {
                    </td>
                    <td className="px-6 py-4 text-right">
                      <div className="flex items-center justify-end gap-2">
-                       <button className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
+                       <button onClick={() => setEditingVocab(v)} className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
                          <Edit2 className="w-4 h-4 text-gray-500" />
                        </button>
-                       <button className="p-2 hover:bg-red-50 rounded-xl transition-colors">
+                       <button onClick={() => handleDelete(v.id)} className="p-2 hover:bg-red-50 rounded-xl transition-colors">
                          <Trash2 className="w-4 h-4 text-red-500" />
                        </button>
                      </div>
@@ -129,7 +216,7 @@ export function AdminVocabulary() {
                ))}
              </tbody>
           </table>
-          {filteredVocabs.length === 0 && (
+          {!loading && filteredVocabs.length === 0 && (
             <div className="py-20 text-center">
               <BookOpen className="w-16 h-16 text-gray-200 mx-auto mb-4" />
               <p className="text-gray-400 font-medium">Không tìm thấy từ vựng nào.</p>
@@ -144,8 +231,18 @@ export function AdminVocabulary() {
           type="vocabulary"
           onClose={() => setShowImporter(false)}
           onImport={async (data) => {
-            return await adminService.importVocabularyBatch(data);
+            const res = await adminService.importVocabularyBatch(data);
+            fetchVocabularies();
+            return res;
           }}
+        />
+      )}
+      
+      {editingVocab !== undefined && (
+        <EditVocabModal 
+          vocab={editingVocab} 
+          onClose={() => setEditingVocab(undefined)}
+          onSave={handleSave}
         />
       )}
     </div>
