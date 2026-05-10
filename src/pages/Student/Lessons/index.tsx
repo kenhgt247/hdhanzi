@@ -3,7 +3,7 @@ import { PlayCircle, CheckCircle, Lock, BookOpen, Target, Compass, Award, ArrowR
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import { cn } from '../../../lib/utils';
-import { getLessons } from '../../../services/lessonService';
+import { getLessons, fetchLessons } from '../../../services/lessonService';
 import { Lesson } from '../../../types/lesson';
 import { motion } from 'motion/react';
 
@@ -13,11 +13,15 @@ export function Lessons() {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   
   useEffect(() => {
-    // In a real app we'd fetch from Firestore, checking completed status against user doc
-    const fetchLessons = async () => {
-      setLessons(getLessons());
+    // Initial sync load
+    setLessons(getLessons());
+    
+    // Async fetch for updates
+    const loadData = async () => {
+      const data = await fetchLessons();
+      setLessons(data);
     };
-    fetchLessons();
+    loadData();
   }, []);
 
   // Group lessons by stage

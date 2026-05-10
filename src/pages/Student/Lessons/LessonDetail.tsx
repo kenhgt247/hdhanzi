@@ -5,7 +5,7 @@ import { cn } from '../../../lib/utils';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useStudyProgress } from '../../../contexts/StudyProgressContext';
 import { weakWordsService } from '../../../services/weakWordsService';
-import { getLessonById } from '../../../services/lessonService';
+import { getLessonById, fetchLessonById } from '../../../services/lessonService';
 import { HanziWriterPractice } from '../../../components/HanziWriterPractice';
 import { PinyinTypingPractice } from '../../../components/PinyinTypingPractice';
 import { Lesson, VocabularyItem, QuizQuestion } from '../../../types/lesson';
@@ -29,12 +29,12 @@ export function LessonDetail() {
 
   useEffect(() => {
     if (id) {
+      // Get synchronous first, then update async to catch firestore updates
       const data = getLessonById(id);
       if (data) {
         setLesson(data);
         setLastLessonId(id);
         
-        // Handle initial tab from query param
         const params = new URLSearchParams(location.search);
         const tabParam = params.get('tab');
         if (tabParam && ['vocab', 'writing', 'patterns', 'grammar', 'reading', 'listening', 'quiz'].includes(tabParam)) {
@@ -45,6 +45,13 @@ export function LessonDetail() {
           setActiveWritingVocab(data.vocabulary[0]);
         }
       }
+
+      // Fetch async to get any remote changes (like generated grammar)
+      fetchLessonById(id).then(asyncData => {
+        if (asyncData) {
+          setLesson(asyncData);
+        }
+      });
     }
   }, [id, setLastLessonId]);
 
