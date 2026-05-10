@@ -43,12 +43,20 @@ export interface FirestoreErrorInfo {
 }
 
 export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const errorMessage = error instanceof Error ? error.message : String(error);
+  
   const errInfo: FirestoreErrorInfo = {
-    error: error instanceof Error ? error.message : String(error),
-    authInfo: { userId: auth.currentUser?.uid },
+    error: errorMessage,
+    authInfo: { userId: auth?.currentUser?.uid },
     operationType,
     path
+  };
+  
+  if (errorMessage.toLowerCase().includes('permission')) {
+    console.error('Firestore Permission Error: ', JSON.stringify(errInfo));
+    throw new Error(JSON.stringify(errInfo));
+  } else {
+    console.warn(`Firestore Warning (${operationType} on ${path}): ${errorMessage}`);
+    // Don't throw for offline/missing db errors so fallbacks can work!
   }
-  console.error('Firestore Error: ', JSON.stringify(errInfo));
-  throw new Error(JSON.stringify(errInfo));
 }

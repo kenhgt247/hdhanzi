@@ -196,12 +196,62 @@ export const adminService = {
   async getLessons() {
     try {
       const snapshot = await getDocs(collection(db, 'lessons'));
-      const firestoreLessons = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Lesson));
+      const firestoreLessons = snapshot.docs.map(doc => {
+        const data = doc.data() as any;
+        if (data.grammar && typeof data.grammar === 'string') {
+          try { data.grammar = JSON.parse(data.grammar); } catch(e) {}
+        }
+      if (data.grammar && typeof data.grammar === 'object' && !Array.isArray(data.grammar)) {
+         const keys = Object.keys(data.grammar);
+         for (const key of keys) {
+            if (typeof data.grammar[key] === 'string') {
+               try { 
+                 const parsed = JSON.parse(data.grammar[key]);
+                 if (Array.isArray(parsed)) {
+                    data.grammar[key] = parsed;
+                 }
+               } catch(e) {}
+            }
+         }
+         
+         if (Array.isArray(data.grammar.grammar)) {
+           data.grammar = data.grammar.grammar;
+         } else {
+           let found = false;
+           for (const key of keys) {
+             if (Array.isArray(data.grammar[key])) {
+               data.grammar = data.grammar[key];
+               found = true;
+               break;
+             }
+           }
+           if (!found && !Array.isArray(data.grammar)) {
+             // Wrap the lone object in an array as fallback
+             data.grammar = Object.keys(data.grammar).length > 0 ? [data.grammar] : [];
+           }
+         }
+      }
+        return { id: doc.id, ...data } as Lesson;
+      });
       
       // Merge with seed lessons. Firestore versions override seed versions.
       const { allLessons } = await import('../data/seedLessons');
       const seedLessonsMap = new Map(allLessons.map(l => [l.id, l]));
-      firestoreLessons.forEach(l => seedLessonsMap.set(l.id, l));
+      firestoreLessons.forEach(l => {
+        const parent = seedLessonsMap.get(l.id);
+        if (parent) {
+          // Deep merge or fallback for missing fields like grammar
+          const mergedLesson = { ...parent, ...l };
+          if (!l.grammar || (Array.isArray(l.grammar) && l.grammar.length === 0) || (typeof l.grammar === 'object' && Object.keys(l.grammar).length === 0)) {
+             if (parent.grammar && parent.grammar.length > 0) {
+                mergedLesson.grammar = parent.grammar;
+             }
+          }
+          seedLessonsMap.set(l.id, mergedLesson);
+        } else {
+          seedLessonsMap.set(l.id, l);
+        }
+      });
       
       const merged = Array.from(seedLessonsMap.values());
       return merged.sort((a, b) => a.day - b.day);

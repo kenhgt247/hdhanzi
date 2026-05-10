@@ -99,6 +99,26 @@ export const stage1Lessons: Lesson[] = [
       suggestedAnswerPinyin: "Nǐ hǎo, xièxiè, zàijiàn",
       suggestedAnswerVietnamese: "Xin chào, cảm ơn, tạm biệt"
     },
+    grammar: [
+      {
+         title: "Câu hỏi với 'ma' (嗎)",
+         explanation: "Trợ từ nghi vấn 'ma' (嗎) được đặt ở cuối câu trần thuật để tạo thành câu hỏi nghi vấn Có/Không.",
+         structure: "S + V + O + 嗎?",
+         examples: [
+            { traditional: "你好嗎？", pinyin: "Nǐ hǎo ma?", vietnamese: "Bạn có khỏe không?" },
+            { traditional: "你是學生嗎？", pinyin: "Nǐ shì xuéshēng ma?", vietnamese: "Bạn là học sinh phải không?" }
+         ]
+      },
+      {
+         title: "Động từ 'shì' (是)",
+         explanation: "'shì' (是) tương đương với động từ 'tobe' (là) trong tiếng Anh. Dùng để định nghĩa hoặc xác nhận một sự vật, sự việc.",
+         structure: "A 是 B",
+         examples: [
+            { traditional: "我是學生。", pinyin: "Wǒ shì xuéshēng.", vietnamese: "Tôi là học sinh." },
+            { traditional: "他是老師。", pinyin: "Tā shì lǎoshī.", vietnamese: "Ông ấy là giáo viên." }
+         ]
+      }
+    ],
     quiz: [
       {
         id: "q_1_1", type: "multiple_choice", question: "Từ 'Xin chào' trong tiếng Trung phồn thể là gì?",
@@ -220,6 +240,17 @@ export const stage1Lessons: Lesson[] = [
       suggestedAnswerPinyin: "mā - mǎ - mà - ma",
       suggestedAnswerVietnamese: "Mẹ - con ngựa - mắng - không?"
     },
+    grammar: [
+      {
+         title: "Luật biến điệu của thanh 3",
+         explanation: "Khi hai âm tiết mang thanh 3 đi liền nhau, âm tiết thứ nhất sẽ đọc thành thanh 2 (tương tự dấu sắc trong tiếng Việt). Tuy nhiên, cách viết Pinyin thường vẫn giữ nguyên thanh 3 ban đầu.",
+         structure: "Thanh 3 + Thanh 3 → Thanh 2 + Thanh 3",
+         examples: [
+            { traditional: "你好", pinyin: "Nǐ hǎo → Ní hǎo", vietnamese: "Xin chào" },
+            { traditional: "很好", pinyin: "Hěn hǎo → Hén hǎo", vietnamese: "Rất tốt" }
+         ]
+      }
+    ],
     quiz: [
       {
         id: "q_2_1", type: "multiple_choice", question: "Chữ 罵 (mà) là thanh mấy?",

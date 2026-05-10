@@ -47,10 +47,13 @@ export function LessonDetail() {
       }
 
       // Fetch async to get any remote changes (like generated grammar)
-      fetchLessonById(id).then(asyncData => {
+      fetchLessonById(id, true).then(asyncData => {
         if (asyncData) {
+          console.log("Fetched asyncData grammar:", asyncData.grammar);
           setLesson(asyncData);
         }
+      }).catch(err => {
+        console.error("fetchLessonById failed:", err);
       });
     }
   }, [id, setLastLessonId]);
@@ -431,13 +434,13 @@ export function LessonDetail() {
         {activeTab === 'grammar' && (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <h2 className="text-xl font-bold text-gray-900 border-l-4 border-blue-500 pl-3">Ngữ pháp</h2>
-            {(!lesson.grammar || lesson.grammar.length === 0) ? (
+            {(!lesson.grammar || (Array.isArray(lesson.grammar) ? lesson.grammar.length === 0 : Object.keys(lesson.grammar).length === 0)) ? (
               <div className="p-8 text-center bg-gray-50 rounded-2xl border border-dashed border-gray-200">
                 <p className="text-gray-500 font-medium">Chưa có nội dung ngữ pháp cho bài này.</p>
               </div>
             ) : (
               <div className="space-y-8">
-                {lesson.grammar.map((g, idx) => (
+                {(Array.isArray(lesson.grammar) ? lesson.grammar : []).map((g: any, idx: number) => (
                   <div key={idx} className="rounded-2xl border bg-white p-6 shadow-sm">
                     <h3 className="text-2xl font-bold text-blue-600 mb-4">{g.title}</h3>
                     
@@ -457,7 +460,7 @@ export function LessonDetail() {
                       <div>
                         <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">Ví dụ</h4>
                         <div className="space-y-3">
-                          {g.examples.map((ex, i) => (
+                          {g.examples.map((ex: any, i: number) => (
                             <div key={i} className="bg-gray-50 p-4 rounded-xl border border-gray-100 flex items-start gap-3">
                               <button 
                                 onClick={() => playAudio(ex.traditional)}

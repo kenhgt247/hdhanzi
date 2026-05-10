@@ -18,6 +18,10 @@ export function AutoGrammarGenerator() {
     setStatus('Đang tải danh sách bài học...');
     
     try {
+      if (!db) {
+        throw new Error("Firebase database chưa được cấu hình! Chức năng này yêu cầu cơ sở dữ liệu Firebase.");
+      }
+      
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
       
       const lessonsRef = collection(db, 'lessons');
@@ -26,7 +30,37 @@ export function AutoGrammarGenerator() {
       
       const lessonsToProcess = allLessons.filter(lesson => {
         const existing = existingLessonsMap.get(lesson.id) as any;
-        return !existing || !existing.grammar || existing.grammar.length === 0;
+        let hasValidGrammar = false;
+        
+        if (existing && existing.grammar) {
+          if (Array.isArray(existing.grammar) && existing.grammar.length > 0) {
+            hasValidGrammar = true;
+          } else if (existing.grammar.grammar && Array.isArray(existing.grammar.grammar)) {
+            console.log("Found wrapped grammar for", lesson.id, "- AUTO FIXING");
+            // Auto fix the wrapped array immediately!
+            setDoc(doc(db, 'lessons', lesson.id), {
+              ...existing,
+              grammar: existing.grammar.grammar
+            }).catch(console.error);
+            hasValidGrammar = true; // It's fixed now, no need to process
+          } else if (typeof existing.grammar === 'object' && !Array.isArray(existing.grammar)) {
+             // Sometimes Gemini returns { "notes": [...] } or similar
+             const keys = Object.keys(existing.grammar);
+             for(const key of keys) {
+                if (Array.isArray(existing.grammar[key]) && existing.grammar[key].length > 0) {
+                   console.log("Found wrapped grammar under key", key, "for", lesson.id, "- AUTO FIXING");
+                   setDoc(doc(db, 'lessons', lesson.id), {
+                     ...existing,
+                     grammar: existing.grammar[key]
+                   }).catch(console.error);
+                   hasValidGrammar = true;
+                   break;
+                }
+             }
+          }
+        }
+        
+        return !hasValidGrammar;
       });
 
       setTotal(lessonsToProcess.length);
@@ -75,7 +109,8 @@ The output must be a standard JSON array of objects, with NO markdown formatting
 
           const text = response.text;
           if (text) {
-            const grammarResult = JSON.parse(text);
+            const cleanText = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+            const grammarResult = JSON.parse(cleanText);
             const existing = existingLessonsMap.get(lesson.id) || {};
             await setDoc(doc(db, 'lessons', lesson.id), {
               ...lesson,
@@ -85,12 +120,10 @@ The output must be a standard JSON array of objects, with NO markdown formatting
           }
         } catch (err: any) {
           console.error(`Failed for lesson ${lesson.title}`, err);
-          // If key is suspended, we stop the loop to avoid overwhelming errors
-          if (err?.message?.includes('suspended')) {
-            setStatus('Lỗi: API Key bị khóa (Suspended). Vui lòng cấu hình lại.');
-            setLoading(false);
-            return;
-          }
+          const errorMsg = err?.message || '';
+          setStatus(`Lỗi xử lý ${lesson.title}: ${errorMsg}. Đang dừng quá trình.`);
+          setLoading(false);
+          return;
         }
 
         count++;
