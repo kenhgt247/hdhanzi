@@ -8,6 +8,7 @@ import { weakWordsService } from '../../../services/weakWordsService';
 import { getLessonById, fetchLessonById, getLessons } from '../../../services/lessonService';
 import { HanziWriterPractice } from '../../../components/HanziWriterPractice';
 import { PinyinTypingPractice } from '../../../components/PinyinTypingPractice';
+import { SpeakingPractice } from '../../../components/SpeakingPractice';
 import { Lesson, VocabularyItem, QuizQuestion } from '../../../types/lesson';
 
 export function LessonDetail() {
@@ -17,7 +18,7 @@ export function LessonDetail() {
   const location = useLocation();
   const { setLastLessonId } = useStudyProgress();
   const [lesson, setLesson] = useState<Lesson | null>(null);
-  const [activeTab, setActiveTab] = useState<'vocab' | 'writing' | 'patterns' | 'grammar' | 'reading' | 'listening' | 'quiz'>('vocab');
+  const [activeTab, setActiveTab] = useState<'vocab' | 'writing' | 'patterns' | 'speaking' | 'grammar' | 'reading' | 'listening' | 'quiz'>('vocab');
 
   // Scoring states
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -27,8 +28,25 @@ export function LessonDetail() {
   // Writing state
   const [activeWritingVocab, setActiveWritingVocab] = useState<VocabularyItem | null>(null);
 
+  const [prevLessonId, setPrevLessonId] = useState<string | null>(null);
+  const [nextLessonId, setNextLessonId] = useState<string | null>(null);
+
   useEffect(() => {
     if (id) {
+      // Reset quiz state when switching lessons
+      setShowResults(false);
+      setAnswers({});
+      setScoreInfo(null);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      // Identify previous and next lessons
+      const allLessons = getLessons();
+      const idx = allLessons.findIndex(l => l.id === id);
+      if (idx !== -1) {
+        setPrevLessonId(idx > 0 ? allLessons[idx - 1].id : null);
+        setNextLessonId(idx < allLessons.length - 1 ? allLessons[idx + 1].id : null);
+      }
+
       // Get synchronous first, then update async to catch firestore updates
       const data = getLessonById(id);
       if (data) {
@@ -37,7 +55,7 @@ export function LessonDetail() {
         
         const params = new URLSearchParams(location.search);
         const tabParam = params.get('tab');
-        if (tabParam && ['vocab', 'writing', 'patterns', 'grammar', 'reading', 'listening', 'quiz'].includes(tabParam)) {
+        if (tabParam && ['vocab', 'writing', 'patterns', 'speaking', 'grammar', 'reading', 'listening', 'quiz'].includes(tabParam)) {
           setActiveTab(tabParam as any);
         }
 
@@ -224,6 +242,7 @@ export function LessonDetail() {
     { id: 'vocab', name: 'Từ vựng', icon: BookOpen },
     { id: 'writing', name: 'Luyện viết', icon: PenTool },
     { id: 'patterns', name: 'Mẫu câu', icon: PenTool },
+    { id: 'speaking', name: 'Luyện nói', icon: Volume2 },
     { id: 'grammar', name: 'Ngữ pháp', icon: BookOpen },
     { id: 'listening', name: 'Luyện nghe', icon: Headphones },
     { id: 'reading', name: 'Luyện đọc', icon: BookOpen },
@@ -235,7 +254,7 @@ export function LessonDetail() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-8 pb-12">
-      <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-6 sm:p-8 rounded-[2rem] shadow-sm border border-gray-100 relative overflow-hidden">
+      <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-white p-6 sm:p-8 rounded-[2rem] shadow-sm border border-gray-100 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50/50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
         <div className="relative z-10 flex items-center gap-4">
           <div 
@@ -249,6 +268,27 @@ export function LessonDetail() {
             <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">{lesson.title}</h1>
             <p className="text-gray-500 mt-1 font-medium">{lesson.topic}</p>
           </div>
+        </div>
+
+        <div className="relative z-10 flex items-center gap-2 self-end md:self-auto w-full md:w-auto justify-end">
+          {prevLessonId && (
+            <button 
+              onClick={() => navigate(`/student/lessons/${prevLessonId}`)}
+              className="flex items-center gap-1.5 px-4 py-2 border border-gray-200 bg-white text-gray-700 rounded-full hover:bg-gray-50 transition text-sm font-medium"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Bài trước
+            </button>
+          )}
+          {nextLessonId && (
+            <button 
+              onClick={() => navigate(`/student/lessons/${nextLessonId}`)}
+              className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition shadow-sm hover:shadow-md text-sm font-medium"
+            >
+              Bài tiếp theo
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </header>
 
@@ -421,6 +461,33 @@ export function LessonDetail() {
                 <ArrowLeft className="h-4 w-4" /> Quay lại
               </button>
               <button 
+                onClick={() => setActiveTab('speaking')}
+                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-blue-600 text-white px-8 py-4 sm:py-3 rounded-2xl sm:rounded-xl font-bold shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all active:scale-95"
+              >
+                Tiếp theo: Luyện nói <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* TAB LUYỆN NÓI */}
+        {activeTab === 'speaking' && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <h2 className="text-xl font-bold text-gray-900 border-l-4 border-blue-500 pl-3">Luyện phát âm & Luyện nói</h2>
+            
+            <SpeakingPractice 
+              sentences={[...lesson.sentencePatterns, ...lesson.vocabulary.map(v => ({ traditional: v.traditional, pinyin: v.pinyin, vietnamese: v.vietnamese }))]} 
+              level={lesson.stage} 
+            />
+
+            <div className="flex flex-col sm:flex-row justify-between gap-3 mt-12">
+              <button 
+                onClick={() => setActiveTab('patterns')}
+                className="w-full sm:w-auto flex items-center justify-center gap-2 text-gray-500 bg-gray-50 hover:bg-gray-100 px-6 py-4 sm:py-3 rounded-2xl sm:rounded-xl font-bold transition-all active:scale-95"
+              >
+                <ArrowLeft className="h-4 w-4" /> Quay lại
+              </button>
+              <button 
                 onClick={() => setActiveTab('grammar')}
                 className="w-full sm:w-auto flex items-center justify-center gap-2 bg-blue-600 text-white px-8 py-4 sm:py-3 rounded-2xl sm:rounded-xl font-bold shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all active:scale-95"
               >
@@ -485,7 +552,7 @@ export function LessonDetail() {
             
             <div className="flex flex-col sm:flex-row justify-between gap-3 mt-12">
               <button 
-                onClick={() => setActiveTab('patterns')}
+                onClick={() => setActiveTab('speaking')}
                 className="w-full sm:w-auto flex items-center justify-center gap-2 text-gray-500 bg-gray-50 hover:bg-gray-100 px-6 py-4 sm:py-3 rounded-2xl sm:rounded-xl font-bold transition-all active:scale-95"
               >
                 <ArrowLeft className="h-4 w-4" /> Quay lại
