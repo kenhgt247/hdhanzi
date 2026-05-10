@@ -121,7 +121,10 @@ export function WeakWords() {
       <div className="max-w-xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <button 
-            onClick={() => setIsReviewing(false)}
+            onClick={() => {
+              setIsReviewing(false);
+              fetchWeakWords();
+            }}
             className="text-gray-500 hover:text-gray-900 flex items-center gap-1"
           >
             <RotateCcw className="w-4 h-4" />
@@ -245,6 +248,25 @@ export function WeakWords() {
           </div>
         </div>
       </header>
+
+      {/* Information Banner */}
+      <div className="px-4 mb-6">
+        <div className="bg-blue-50/50 border border-blue-100 rounded-2xl p-4 flex gap-3">
+          <div className="mt-0.5 shrink-0">
+            <HelpCircle className="w-5 h-5 text-blue-500" />
+          </div>
+          <div className="text-sm text-gray-700 space-y-2">
+            <div>
+              <p className="font-bold text-gray-900">Khi nào một từ bị đưa vào đây?</p>
+              <p className="text-gray-600">Từ sẽ xuất hiện ở đây khi bạn làm sai (chọn sai đáp án, không vượt qua bài tập nói/nghe...) trong các bài luyện tập hoặc đề thi.</p>
+            </div>
+            <div>
+              <p className="font-bold text-gray-900">Cải thiện như thế nào?</p>
+              <p className="text-gray-600">Từ yếu có 3 mức độ: <span className="font-semibold text-red-600">Rất yếu</span> (mới sai), <span className="font-semibold text-orange-600">Đang cải thiện</span> (ôn đúng 3 lần) và <span className="font-semibold text-emerald-600">Đã thuộc</span> (ôn đúng 5 lần). Bạn hãy nhấn nút <strong>Ôn tập ngay</strong> để luyện lại các từ này và chuyển chúng sang trạng thái Đã thuộc nhé!</p>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Summary Stats */}
       <div className="px-4 mb-8">
