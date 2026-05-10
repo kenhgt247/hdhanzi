@@ -16,6 +16,12 @@ import { stage4LessonsPart3 } from './seedLessonsPart14';
 import { stage5LessonsPart1 } from './seedLessonsPart15';
 import { stage5LessonsPart2 } from './seedLessonsPart16';
 import { stage6LessonsPart1 } from './seedLessonsPart17';
+import { taiwanLessonsPart1 } from './seedLessonsPart18';
+import { taiwanLessonsPart2 } from './seedLessonsPart19';
+import { taiwanLessonsPart3 } from './seedLessonsPart20';
+import { taiwanLessonsPart4 } from './seedLessonsPart21';
+import { taiwanLessonsPart5 } from './seedLessonsPart22';
+import { taiwanLessonsPart6 } from './seedLessonsPart23';
 
 export const allLessons: Lesson[] = [
   ...stage1Lessons,
@@ -34,5 +40,11 @@ export const allLessons: Lesson[] = [
   ...stage4LessonsPart3,
   ...stage5LessonsPart1,
   ...stage5LessonsPart2,
-  ...stage6LessonsPart1
+  ...stage6LessonsPart1,
+  ...taiwanLessonsPart1,
+  ...taiwanLessonsPart2,
+  ...taiwanLessonsPart3,
+  ...taiwanLessonsPart4,
+  ...taiwanLessonsPart5,
+  ...taiwanLessonsPart6
 ];

@@ -27,6 +27,13 @@ export function Lessons() {
   // Group lessons by stage
   const stages = Array.from(new Set(lessons.map(l => l.stage)));
 
+  // Pagination logic
+  const [currentPage, setCurrentPage] = useState(1);
+  const stagesPerPage = 3; // 15 lessons per page since 1 stage = 5 lessons generally
+  const totalPages = Math.ceil(stages.length / stagesPerPage);
+  
+  const currentStages = stages.slice((currentPage - 1) * stagesPerPage, currentPage * stagesPerPage);
+
   return (
     <div className="mx-auto max-w-5xl space-y-10 pb-12">
       {/* Header Info */}
@@ -35,7 +42,7 @@ export function Lessons() {
           <div className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-1 flex items-center gap-1.5">
             <Compass className="w-4 h-4" /> Khám phá
           </div>
-          <h1 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">Lộ trình học 60 Ngày</h1>
+          <h1 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">Lộ trình học 90 Ngày</h1>
           <p className="text-gray-500 mt-2 font-medium max-w-xl">Giáo trình tiếng Trung Phồn thể chuyên biệt - Hành trang tự tin cho người lao động, du học sinh trước khi sinh sống tại Đài Loan.</p>
         </div>
         <div className="hidden md:flex items-center gap-3 bg-white p-2 rounded-2xl border border-gray-100 shadow-sm">
@@ -85,7 +92,8 @@ export function Lessons() {
       </div>
 
       <div className="space-y-12">
-        {stages.map((stageTitle, stageIndex) => {
+        {currentStages.map((stageTitle, idx) => {
+          const stageIndex = stages.indexOf(stageTitle);
           const stageLessons = lessons.filter(l => l.stage === stageTitle);
           // For mock logic: let's pretend day 1 is completed, day 2 is current
           return (
@@ -163,6 +171,43 @@ export function Lessons() {
           );
         })}
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center gap-2 mt-8 pt-6">
+          <button 
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium disabled:opacity-50 hover:bg-gray-50 transition"
+          >
+            Trang trước
+          </button>
+          
+          <div className="flex items-center gap-2">
+            {Array.from({ length: totalPages }).map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentPage(i + 1)}
+                className={cn(
+                  "w-10 h-10 rounded-lg text-sm font-bold transition",
+                  currentPage === i + 1 
+                    ? "bg-blue-600 text-white" 
+                    : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
+                )}
+              >
+                 {i + 1}
+              </button>
+            ))}
+          </div>
+
+          <button 
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium disabled:opacity-50 hover:bg-gray-50 transition"
+          >
+            Trang tiếp
+          </button>
+        </div>
+      )}
     </div>
   );
 }

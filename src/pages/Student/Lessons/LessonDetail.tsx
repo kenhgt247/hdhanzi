@@ -5,7 +5,7 @@ import { cn } from '../../../lib/utils';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useStudyProgress } from '../../../contexts/StudyProgressContext';
 import { weakWordsService } from '../../../services/weakWordsService';
-import { getLessonById, fetchLessonById } from '../../../services/lessonService';
+import { getLessonById, fetchLessonById, getLessons } from '../../../services/lessonService';
 import { HanziWriterPractice } from '../../../components/HanziWriterPractice';
 import { PinyinTypingPractice } from '../../../components/PinyinTypingPractice';
 import { Lesson, VocabularyItem, QuizQuestion } from '../../../types/lesson';
@@ -648,14 +648,38 @@ export function LessonDetail() {
                     Chúc mừng bạn đã hoàn thành xuất sắc bài học này! Kiến thức của bạn rất vững.
                   </p>
                 )}
-                <div className="mt-8 flex justify-center gap-4">
+                <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
                     {scoreInfo.passed ? (
-                        <button
-                            onClick={() => navigate('/student/lessons')}
-                            className="bg-blue-600 text-white px-8 py-3 rounded-xl hover:bg-blue-700 transition font-bold shadow-sm"
-                        >
-                            Quay về danh sách bài học
-                        </button>
+                        <>
+                            <button
+                                onClick={() => navigate('/student/lessons')}
+                                className="bg-white border-2 border-gray-200 text-gray-700 px-8 py-3 rounded-xl hover:bg-gray-50 transition font-bold"
+                            >
+                                Quay về danh sách
+                            </button>
+                            {(() => {
+                                const lessonsList = getLessons();
+                                const currentIndex = lessonsList.findIndex(l => l.id === lesson.id);
+                                const nextLesson = currentIndex !== -1 && currentIndex + 1 < lessonsList.length ? lessonsList[currentIndex + 1] : null;
+                                if (nextLesson) {
+                                    return (
+                                        <button
+                                        onClick={() => {
+                                            navigate(`/student/lessons/${nextLesson.id}`);
+                                            setShowResults(false);
+                                            setScoreInfo(null);
+                                            setAnswers({});
+                                            setActiveTab('vocab');
+                                        }}
+                                        className="bg-blue-600 text-white px-8 py-3 rounded-xl hover:bg-blue-700 transition font-bold shadow-sm flex items-center justify-center gap-2"
+                                        >
+                                           Bài học tiếp theo <ChevronRight className="w-5 h-5" />
+                                        </button>
+                                    );
+                                }
+                                return null;
+                            })()}
+                        </>
                     ) : (
                         <button
                             onClick={() => {
