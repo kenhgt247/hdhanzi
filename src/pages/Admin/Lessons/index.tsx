@@ -49,12 +49,22 @@ export function AdminLessons() {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [editingLesson, setEditingLesson] = useState<Lesson | null | undefined>(undefined);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  // Pagination keys
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const fetchLessons = async () => {
     setLoading(true);
-    const data = await adminService.getLessons();
-    setLessons(data);
-    setLoading(false);
+    try {
+      const data = await adminService.getLessons();
+      setLessons(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -81,6 +91,14 @@ export function AdminLessons() {
       fetchLessons();
     }
   };
+
+  const filteredLessons = lessons.filter(l => 
+    l.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    l.topic.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const totalPages = Math.ceil(filteredLessons.length / itemsPerPage);
+  const paginatedLessons = filteredLessons.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
     <div className="space-y-6">
@@ -131,6 +149,8 @@ export function AdminLessons() {
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
           <input 
             type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Tìm kiếm bài học..."
             className="w-full pl-12 pr-4 py-3 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
           />
@@ -151,9 +171,9 @@ export function AdminLessons() {
              <tbody className="divide-y divide-gray-50">
                {loading ? (
                  <tr><td colSpan={4} className="p-6 text-center text-gray-500">Đang tải...</td></tr>
-               ) : lessons.length === 0 ? (
+               ) : paginatedLessons.length === 0 ? (
                  <tr><td colSpan={4} className="p-6 text-center text-gray-500">Chưa có bài học nào.</td></tr>
-               ) : lessons.map((lesson: Lesson) => (
+               ) : paginatedLessons.map((lesson: Lesson) => (
                  <tr key={lesson.id} className="hover:bg-blue-50/30 transition-colors">
                    <td className="px-6 py-4">
                      <div className="flex items-center gap-3">

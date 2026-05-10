@@ -49,12 +49,22 @@ export function AdminMockTests() {
   const [tests, setTests] = useState<any[]>(seedMockTests);
   const [editingTest, setEditingTest] = useState<any | null | undefined>(undefined);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
 
   const fetchTests = async () => {
     setLoading(true);
-    const data = await adminService.getMockTests();
-    setTests(data.length > 0 ? data : seedMockTests);
-    setLoading(false);
+    try {
+      const data = await adminService.getMockTests();
+      setTests(data.length > 0 ? data : seedMockTests);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -81,6 +91,14 @@ export function AdminMockTests() {
       fetchTests();
     }
   };
+
+  const filteredTests = tests.filter(t => 
+    t.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    t.level.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const totalPages = Math.ceil(filteredTests.length / itemsPerPage);
+  const paginatedTests = filteredTests.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
     <div className="space-y-6">
@@ -131,6 +149,11 @@ export function AdminMockTests() {
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
           <input 
             type="text"
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
             placeholder="Tìm kiếm bộ đề..."
             className="w-full pl-12 pr-4 py-3 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
           />
@@ -139,9 +162,15 @@ export function AdminMockTests() {
 
       {loading ? (
         <div className="p-6 text-center text-gray-500">Đang tải...</div>
+      ) : paginatedTests.length === 0 ? (
+        <div className="p-12 text-center bg-white rounded-3xl border border-gray-100">
+          <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <p className="text-gray-500 font-medium">Không tìm thấy bộ đề thi nào.</p>
+        </div>
       ) : (
+      <>
       <div className="grid gap-6 md:grid-cols-2">
-        {tests.map((test) => (
+        {paginatedTests.map((test) => (
           <div key={test.id} className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm flex flex-col justify-between">
             <div>
               <div className="flex justify-between items-start mb-6">
@@ -186,6 +215,32 @@ export function AdminMockTests() {
           </div>
         ))}
       </div>
+      
+      {totalPages > 1 && (
+        <div className="p-4 bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+          <span className="text-sm text-gray-500">
+            Hiển thị {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, filteredTests.length)} trong {filteredTests.length} đề thi
+          </span>
+          <div className="flex gap-1 overflow-x-auto">
+            <button
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(p => p - 1)}
+              className="px-3 py-1 border rounded-lg hover:bg-gray-50 disabled:opacity-50"
+            >
+              Trước
+            </button>
+            <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg font-medium">{currentPage} / {totalPages}</span>
+            <button
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage(p => p + 1)}
+              className="px-3 py-1 border rounded-lg hover:bg-gray-50 disabled:opacity-50"
+            >
+              Sau
+            </button>
+          </div>
+        </div>
+      )}
+      </>
       )}
 
       {showImporter && (

@@ -59,20 +59,31 @@ export function AdminVocabulary() {
   const [showAICreator, setShowAICreator] = useState(false);
   const [editingVocab, setEditingVocab] = useState<Vocab | null | undefined>(undefined);
   const [loading, setLoading] = useState(true);
+  
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50;
 
   const fetchVocabularies = async () => {
     setLoading(true);
-    const data = await adminService.getVocabularies();
-    // Combine with seed data to have something if firestore is empty, or just use firestore
-    // We will just use firestore since this is admin. If they just set it up, they need to import.
-    // For convenience, if empty, we can show seed data.
-    setVocabList(data.length > 0 ? data : tocflVocabularies);
-    setLoading(false);
+    try {
+      const data = await adminService.getVocabularies();
+      setVocabList(data.length > 0 ? data : tocflVocabularies);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     fetchVocabularies();
   }, []);
+
+  // Reset page when search or filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedLevel]);
 
   const handleSave = async (formData: any) => {
     if (editingVocab && editingVocab.id) {
@@ -102,6 +113,9 @@ export function AdminVocabulary() {
     const matchesLevel = selectedLevel === 'All' || v.level === selectedLevel;
     return matchesSearch && matchesLevel;
   });
+
+  const totalPages = Math.ceil(filteredVocabs.length / itemsPerPage);
+  const paginatedVocabs = filteredVocabs.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
     <div className="space-y-6">
@@ -187,7 +201,7 @@ export function AdminVocabulary() {
              <tbody className="divide-y divide-gray-50">
                {loading ? (
                  <tr><td colSpan={5} className="p-6 text-center text-gray-500">Đang tải...</td></tr>
-               ) : filteredVocabs.slice(0, 50).map((v, i) => (
+               ) : paginatedVocabs.map((v, i) => (
                  <tr key={v.id || i} className="hover:bg-blue-50/30 transition-colors">
                    <td className="px-6 py-4">
                      <span className="text-2xl font-serif font-black text-gray-900">{v.traditional}</span>
@@ -216,15 +230,39 @@ export function AdminVocabulary() {
                ))}
              </tbody>
           </table>
-          {!loading && filteredVocabs.length === 0 && (
+          {!loading && paginatedVocabs.length === 0 && (
             <div className="py-20 text-center">
               <BookOpen className="w-16 h-16 text-gray-200 mx-auto mb-4" />
               <p className="text-gray-400 font-medium">Không tìm thấy từ vựng nào.</p>
             </div>
           )}
         </div>
+        
+        {totalPages > 1 && (
+          <div className="p-4 border-t border-gray-100 flex items-center justify-between">
+            <span className="text-sm text-gray-500">
+              Hiển thị {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, filteredVocabs.length)} trong {filteredVocabs.length} từ vựng
+            </span>
+            <div className="flex gap-1 overflow-x-auto">
+              <button
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(p => p - 1)}
+                className="px-3 py-1 border rounded-lg hover:bg-gray-50 disabled:opacity-50"
+              >
+                Trước
+              </button>
+              <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg font-medium">{currentPage} / {totalPages}</span>
+              <button
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage(p => p + 1)}
+                className="px-3 py-1 border rounded-lg hover:bg-gray-50 disabled:opacity-50"
+              >
+                Sau
+              </button>
+            </div>
+          </div>
+        )}
       </div>
-      <p className="text-center text-xs text-gray-400">Hiển thị tối đa 50 từ vựng. Dùng tìm kiếm để lọc kết quả.</p>
 
       {showImporter && (
         <DataImporter 
