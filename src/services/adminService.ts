@@ -130,8 +130,13 @@ export const adminService = {
       
       return Array.from(seedVocabMap.values());
     } catch (error) {
-      handleFirestoreError(error, OperationType.LIST, 'vocabulary');
-      return [];
+      try {
+        handleFirestoreError(error, OperationType.LIST, 'vocabulary');
+      } catch (e) {
+         console.warn("Firestore error fallback to seed data:", e);
+      }
+      const { tocflVocabularies } = await import('../data/vocabulary');
+      return tocflVocabularies;
     }
   },
 
@@ -201,8 +206,13 @@ export const adminService = {
       const merged = Array.from(seedLessonsMap.values());
       return merged.sort((a, b) => a.day - b.day);
     } catch (error) {
-      handleFirestoreError(error, OperationType.LIST, 'lessons');
-      return [];
+      try {
+        handleFirestoreError(error, OperationType.LIST, 'lessons');
+      } catch (e) {
+        console.warn("Firestore error fallback to seed data:", e);
+      }
+      const { allLessons } = await import('../data/seedLessons');
+      return allLessons;
     }
   },
 
@@ -269,8 +279,13 @@ export const adminService = {
       
       return Array.from(seedDialoguesMap.values());
     } catch (error) {
-      handleFirestoreError(error, OperationType.LIST, 'dialogues');
-      return [];
+      try {
+        handleFirestoreError(error, OperationType.LIST, 'dialogues');
+      } catch (e) {
+         console.warn("Firestore error fallback to seed data:", e);
+      }
+      const { MOCK_DIALOGUES } = await import('../data/mockDialogues');
+      return MOCK_DIALOGUES;
     }
   },
 
@@ -318,8 +333,13 @@ export const adminService = {
       
       return Array.from(seedTestsMap.values());
     } catch (error) {
-      handleFirestoreError(error, OperationType.LIST, 'mockTests');
-      return [];
+      try {
+        handleFirestoreError(error, OperationType.LIST, 'mockTests');
+      } catch (e) {
+         console.warn("Firestore error fallback to seed data:", e);
+      }
+      const { MOCK_TESTS } = await import('../data/mockTests');
+      return MOCK_TESTS;
     }
   },
 
