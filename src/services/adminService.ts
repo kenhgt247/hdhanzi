@@ -122,7 +122,13 @@ export const adminService = {
   async getVocabularies() {
     try {
       const snapshot = await getDocs(collection(db, 'vocabulary'));
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Vocab));
+      const firestoreVocab = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Vocab));
+      
+      const { tocflVocabularies } = await import('../data/vocabulary');
+      const seedVocabMap = new Map(tocflVocabularies.map(v => [v.id, v]));
+      firestoreVocab.forEach(v => seedVocabMap.set(v.id, v));
+      
+      return Array.from(seedVocabMap.values());
     } catch (error) {
       handleFirestoreError(error, OperationType.LIST, 'vocabulary');
       return [];
@@ -185,7 +191,15 @@ export const adminService = {
   async getLessons() {
     try {
       const snapshot = await getDocs(collection(db, 'lessons'));
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Lesson));
+      const firestoreLessons = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Lesson));
+      
+      // Merge with seed lessons. Firestore versions override seed versions.
+      const { allLessons } = await import('../data/seedLessons');
+      const seedLessonsMap = new Map(allLessons.map(l => [l.id, l]));
+      firestoreLessons.forEach(l => seedLessonsMap.set(l.id, l));
+      
+      const merged = Array.from(seedLessonsMap.values());
+      return merged.sort((a, b) => a.day - b.day);
     } catch (error) {
       handleFirestoreError(error, OperationType.LIST, 'lessons');
       return [];
@@ -247,7 +261,13 @@ export const adminService = {
   async getDialogues() {
     try {
       const snapshot = await getDocs(collection(db, 'dialogues'));
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
+      const firestoreDialogues = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
+      
+      const { MOCK_DIALOGUES } = await import('../data/mockDialogues');
+      const seedDialoguesMap = new Map(MOCK_DIALOGUES.map(d => [d.id, d]));
+      firestoreDialogues.forEach(d => seedDialoguesMap.set(d.id, d));
+      
+      return Array.from(seedDialoguesMap.values());
     } catch (error) {
       handleFirestoreError(error, OperationType.LIST, 'dialogues');
       return [];
@@ -290,7 +310,13 @@ export const adminService = {
   async getMockTests() {
     try {
       const snapshot = await getDocs(collection(db, 'mockTests'));
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MockTest));
+      const firestoreTests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MockTest));
+      
+      const { MOCK_TESTS } = await import('../data/mockTests');
+      const seedTestsMap = new Map(MOCK_TESTS.map(t => [t.id, t]));
+      firestoreTests.forEach(t => seedTestsMap.set(t.id, t));
+      
+      return Array.from(seedTestsMap.values());
     } catch (error) {
       handleFirestoreError(error, OperationType.LIST, 'mockTests');
       return [];

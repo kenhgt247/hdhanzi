@@ -68,7 +68,7 @@ export function AdminVocabulary() {
     setLoading(true);
     try {
       const data = await adminService.getVocabularies();
-      setVocabList(data.length > 0 ? data : tocflVocabularies);
+      setVocabList(data);
     } catch (err) {
       console.error(err);
     } finally {

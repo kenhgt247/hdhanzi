@@ -59,7 +59,7 @@ export function AdminMockTests() {
     setLoading(true);
     try {
       const data = await adminService.getMockTests();
-      setTests(data.length > 0 ? data : seedMockTests);
+      setTests(data);
     } catch (err) {
       console.error(err);
     } finally {

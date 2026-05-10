@@ -4,13 +4,7 @@ import { cn } from '../../../lib/utils';
 import { DataImporter } from '../../../components/Admin/DataImporter';
 import { adminService } from '../../../services/adminService';
 import { AICreator } from '../../../components/Admin/AICreator';
-
-// Mock dialogues for initial view
-const MOCK_DIALOGUES = [
-  { id: 'd1', title: 'Tại sân bay', category: 'Du lịch', questionsCount: 5 },
-  { id: 'd2', title: 'Đặt món ăn', category: 'Đời sống', questionsCount: 8 },
-  { id: 'd3', title: 'Phỏng vấn xin việc', category: 'Công việc', questionsCount: 12 },
-];
+import { MOCK_DIALOGUES } from '../../../data/mockDialogues';
 
 function EditDialogueModal({ dialogue, onClose, onSave }: { dialogue?: any | null, onClose: () => void, onSave: (d: any) => void }) {
   const [formData, setFormData] = useState({
@@ -65,7 +59,7 @@ export function AdminDialogues() {
     setLoading(true);
     try {
       const data = await adminService.getDialogues();
-      setDialogues(data.length > 0 ? data : MOCK_DIALOGUES);
+      setDialogues(data);
     } catch (err) {
       console.error(err);
     } finally {
