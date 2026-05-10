@@ -5,6 +5,7 @@ import { Lesson } from '../../../types/lesson';
 import { DataImporter } from '../../../components/Admin/DataImporter';
 import { adminService } from '../../../services/adminService';
 import { AICreator } from '../../../components/Admin/AICreator';
+import { AutoGrammarGenerator } from '../../../components/Admin/AutoGrammarGenerator';
 
 function EditLessonModal({ lesson, onClose, onSave }: { lesson?: Lesson | null, onClose: () => void, onSave: (l: any) => void }) {
   const [formData, setFormData] = useState({
@@ -107,7 +108,7 @@ export function AdminLessons() {
           <h1 className="text-3xl font-black text-gray-900">Quản lý Bài học</h1>
           <p className="text-gray-500 font-medium">Quản lý nội dung bài học, ngữ pháp và phân phối theo trình độ.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <button 
             onClick={() => setShowAICreator(!showAICreator)}
             className={cn(
@@ -157,100 +158,72 @@ export function AdminLessons() {
         </div>
       </div>
 
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse hidden md:table">
-             <thead className="bg-gray-50/50 border-b">
-               <tr>
-                 <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Tên bài học</th>
-                 <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Trình độ</th>
-                 <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Từ vựng</th>
-                 <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-right">Thao tác</th>
-               </tr>
-             </thead>
-             <tbody className="divide-y divide-gray-50">
-               {loading ? (
-                 <tr><td colSpan={4} className="p-6 text-center text-gray-500">Đang tải...</td></tr>
-               ) : paginatedLessons.map((lesson: Lesson) => (
-                 <tr key={lesson.id} className="hover:bg-blue-50/30 transition-colors">
-                   <td className="px-6 py-4">
-                     <div className="flex items-center gap-3">
-                       <div className="p-2 bg-gray-50 rounded-xl">
-                          <BookOpen className="w-5 h-5 text-gray-400" />
-                       </div>
-                       <div>
-                         <p className="font-bold text-gray-900">{lesson.title}</p>
-                         <p className="text-xs text-gray-500 line-clamp-1">{lesson.topic}</p>
-                       </div>
-                     </div>
-                   </td>
-                   <td className="px-6 py-4">
-                      <span className="px-3 py-1 rounded-full text-xs font-black bg-emerald-50 text-emerald-600">
-                        {lesson.stage}
-                      </span>
-                   </td>
-                   <td className="px-6 py-4">
-                      <span className="text-sm font-bold text-gray-600">{lesson.vocabulary?.length || 0} từ</span>
-                   </td>
-                   <td className="px-6 py-4 text-right">
-                     <div className="flex items-center justify-end gap-2">
-                       <button onClick={() => setEditingLesson(lesson)} className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
-                         <Edit2 className="w-4 h-4 text-gray-500" />
-                       </button>
-                       <button onClick={() => handleDelete(lesson.id)} className="p-2 hover:bg-red-50 rounded-xl transition-colors">
-                         <Trash2 className="w-4 h-4 text-red-500" />
-                       </button>
-                     </div>
-                   </td>
-                 </tr>
-               ))}
-             </tbody>
-          </table>
-          <div className="md:hidden divide-y divide-gray-100">
-            {loading ? (
-              <div className="p-6 text-center text-gray-500">Đang tải...</div>
-            ) : paginatedLessons.map((lesson: Lesson) => (
-              <div key={lesson.id} className="p-4 bg-white hover:bg-gray-50 transition">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-blue-50 rounded-xl shrink-0">
-                      <BookOpen className="w-6 h-6 text-blue-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-gray-900 leading-tight">{lesson.title}</h3>
-                      <p className="text-xs text-gray-500 line-clamp-1 mt-1">{lesson.topic}</p>
-                    </div>
-                  </div>
+      <AutoGrammarGenerator />
+
+      {loading ? (
+        <div className="p-6 text-center text-gray-500 bg-white rounded-3xl border border-gray-100">Đang tải...</div>
+      ) : paginatedLessons.length === 0 ? (
+        <div className="p-12 text-center bg-white rounded-3xl border border-gray-100">
+           <BookOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+           <p className="text-gray-500 font-medium">Chưa có bài học nào.</p>
+        </div>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {paginatedLessons.map((lesson: Lesson) => (
+            <div key={lesson.id} className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex justify-between items-start mb-4">
+                <div className="p-3 bg-blue-50 rounded-2xl">
+                   <BookOpen className="w-6 h-6 text-blue-600" />
                 </div>
-                <div className="flex items-center justify-between text-xs mt-3">
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-1 rounded text-[10px] font-black bg-emerald-50 text-emerald-600">
-                      {lesson.stage}
-                    </span>
-                    <span className="text-gray-500 font-medium">
-                      {lesson.vocabulary?.length || 0} từ vựng
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <button onClick={() => setEditingLesson(lesson)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-400">
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button onClick={() => handleDelete(lesson.id)} className="p-2 hover:bg-red-50 rounded-lg transition-colors text-red-400">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
+                <div className="flex gap-1">
+                  <button onClick={() => setEditingLesson(lesson)} className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
+                    <Edit2 className="w-4 h-4 text-gray-500" />
+                  </button>
+                  <button onClick={() => handleDelete(lesson.id)} className="p-2 hover:bg-red-50 rounded-xl transition-colors">
+                    <Trash2 className="w-4 h-4 text-red-500" />
+                  </button>
                 </div>
               </div>
-            ))}
-          </div>
-          {!loading && paginatedLessons.length === 0 && (
-            <div className="py-20 text-center">
-              <BookOpen className="w-16 h-16 text-gray-200 mx-auto mb-4" />
-              <div className="text-gray-500 font-medium">Chưa có bài học nào.</div>
+              <h3 className="text-xl font-bold text-gray-900 mb-1">{lesson.title}</h3>
+              <p className="text-sm font-medium text-gray-400 mb-4 line-clamp-1">{lesson.topic}</p>
+              
+              <div className="flex items-center gap-2 mb-4">
+                <span className="px-3 py-1 rounded-full text-xs font-black bg-emerald-50 text-emerald-600">
+                  {lesson.stage}
+                </span>
+                <span className="px-3 py-1 rounded-full text-xs font-black bg-gray-50 text-gray-600">
+                  {lesson.vocabulary?.length || 0} từ vựng
+                </span>
+              </div>
             </div>
-          )}
+          ))}
         </div>
-      </div>
+      )}
+
+      {totalPages > 1 && (
+        <div className="p-4 bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+          <span className="text-sm text-gray-500">
+            Hiển thị {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, filteredLessons.length)} trong {filteredLessons.length} bài học
+          </span>
+          <div className="flex gap-1 overflow-x-auto">
+            <button
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(p => p - 1)}
+              className="px-3 py-1 border rounded-lg hover:bg-gray-50 disabled:opacity-50"
+            >
+              Trước
+            </button>
+            <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg font-medium">{currentPage} / {totalPages}</span>
+            <button
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage(p => p + 1)}
+              className="px-3 py-1 border rounded-lg hover:bg-gray-50 disabled:opacity-50"
+            >
+              Sau
+            </button>
+          </div>
+        </div>
+      )}
 
       {showImporter && (
         <DataImporter 
