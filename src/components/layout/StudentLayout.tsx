@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { Home, BookOpen, GraduationCap, FileText, UserCircle, BookA, Sparkles, LogIn, LogOut, Zap, AlertCircle } from 'lucide-react';
+import { Home, BookOpen, GraduationCap, FileText, UserCircle, BookA, Sparkles, LogIn, LogOut, Zap, AlertCircle, PhoneCall } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -31,7 +31,7 @@ export function StudentLayout() {
   return (
     <div className="flex h-screen flex-col bg-gray-50 pb-[calc(5rem+env(safe-area-inset-bottom))] md:flex-row md:pb-0">
       <header className="sticky top-0 z-50 flex items-center justify-between bg-white px-4 py-3 border-b border-gray-100 shadow-sm md:hidden">
-        <h1 className="text-xl font-black text-blue-600 tracking-tighter">HD Chinese</h1>
+        <h1 className="text-xl font-black text-blue-600 tracking-tighter">HD Hanzi</h1>
         <div className="flex items-center gap-3">
           <NavLink 
             to="/student/today" 
@@ -62,7 +62,7 @@ export function StudentLayout() {
 
       <aside className="hidden w-64 flex-col border-r bg-white shadow-md md:flex">
         <div className="flex h-14 items-center justify-center border-b px-4">
-          <h1 className="text-xl font-bold text-blue-600">HD Chinese</h1>
+          <h1 className="text-xl font-bold text-blue-600">HD Hanzi</h1>
         </div>
         <nav className="flex-1 space-y-1 p-4 overflow-y-auto">
           {sidebarItems.map((item) => (
@@ -85,10 +85,13 @@ export function StudentLayout() {
           ))}
         </nav>
         
-        <div className="border-t p-4 flex flex-col gap-3">
-          <div className="text-[11px] text-gray-500 bg-gray-50 p-2 rounded-lg border border-gray-100">
-            <p className="font-semibold text-gray-700">Công ty cổ phần du học Hải Dương</p>
-            <p>SĐT: 0912.434.666</p>
+        <div className="border-t p-4 flex flex-col gap-4">
+          <div className="bg-gradient-to-br from-blue-600 to-blue-700 p-4 rounded-xl shadow-md text-white">
+            <h3 className="font-bold text-sm tracking-tight leading-snug mb-3">Công ty Cổ phần<br/>Du học Hải Dương</h3>
+            <div className="flex items-center gap-2.5 bg-white/20 backdrop-blur-sm p-2.5 rounded-lg border border-white/20">
+              <PhoneCall className="w-4 h-4 shrink-0" />
+              <a href="tel:0912434666" className="font-bold text-sm hover:underline">0912.434.666</a>
+            </div>
           </div>
           
           {user?.id !== 'guest' ? (

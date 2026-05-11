@@ -154,7 +154,7 @@ export function DataImporter({ type, onClose, onImport }: DataImporterProps) {
               <Upload className="w-6 h-6 text-blue-600" />
               Import {displayNameMap[type]}
             </h2>
-            <p className="text-sm font-medium text-gray-500 mt-1">Dữ liệu thật cho hệ thống HD Chinese.</p>
+            <p className="text-sm font-medium text-gray-500 mt-1">Dữ liệu thật cho hệ thống HD Hanzi.</p>
           </div>
           <button onClick={onClose} className="p-3 hover:bg-gray-200 rounded-2xl transition-colors">
             <X className="w-6 h-6 text-gray-400" />

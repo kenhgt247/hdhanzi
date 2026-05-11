@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { LogOut, User, Mail, Award, Target, Mic, PenTool, ChevronRight, BookOpen, Clock, Check, Edit2, Zap, LogIn, AlertCircle, BookA, FileText, Shield } from 'lucide-react';
+import { LogOut, User, Mail, Award, Target, Mic, PenTool, ChevronRight, BookOpen, Clock, Check, Edit2, Zap, LogIn, AlertCircle, BookA, FileText, Shield, PhoneCall } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useStudyProgress } from '../../../contexts/StudyProgressContext';
 import { NavLink, useNavigate } from 'react-router-dom';
@@ -278,6 +278,26 @@ export function Profile() {
             </NavLink>
           ))}
         </div>
+      </div>
+
+      {/* Support / Contact - Mobile & Desktop */}
+      <div className="mx-4 md:hidden rounded-[2rem] border border-blue-100 bg-gradient-to-br from-blue-600 to-blue-700 p-6 text-white shadow-lg shadow-blue-100">
+        <div className="flex items-center gap-4 mb-4">
+          <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm shadow-sm">
+            <PhoneCall className="w-6 h-6" />
+          </div>
+          <div>
+            <h3 className="font-black text-lg tracking-tight">Hỗ trợ du học Đài Loan</h3>
+            <p className="text-blue-100 text-sm font-medium">Công ty Cổ phần Du học Hải Dương</p>
+          </div>
+        </div>
+        <a 
+          href="tel:0912434666" 
+          className="flex items-center justify-center gap-2 w-full py-4 bg-white text-blue-700 font-black rounded-2xl shadow-sm hover:scale-[1.02] active:scale-95 transition-all"
+        >
+          <PhoneCall className="w-5 h-5" />
+          0912.434.666
+        </a>
       </div>
 
       {/* Account Settings */}

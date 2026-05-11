@@ -44,7 +44,7 @@ export function AdminDashboard() {
       <header className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-start">
         <div>
           <h1 className="text-3xl font-black text-gray-900">Admin Dashboard</h1>
-          <p className="text-gray-500 font-medium">Hệ thống quản lý HD Chinese.</p>
+          <p className="text-gray-500 font-medium">Hệ thống quản lý HD Hanzi.</p>
         </div>
         <div className="flex gap-2">
            <div className="px-4 py-2 bg-white rounded-xl border text-sm font-bold shadow-sm">

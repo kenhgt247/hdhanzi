@@ -25,7 +25,11 @@ export function Login() {
       await signInWithGoogle();
       navigate(from, { replace: true });
     } catch (err: any) {
-      setError(err.message || 'Đã xảy ra lỗi khi xác thực bằng Google.');
+      if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
+        setError('Bạn đã huỷ đăng nhập. Vui lòng thử lại.');
+      } else {
+        setError(err.message || 'Đã xảy ra lỗi khi xác thực bằng Google.');
+      }
     } finally {
       setIsSubmitting(false);
     }

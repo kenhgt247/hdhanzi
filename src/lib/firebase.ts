@@ -3,19 +3,17 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 const firebaseConfig = {
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "gen-lang-client-0136452922",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:183619724391:web:511bfeaf09b8e7de49e0c2",
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDXWb0kB9jeNqFqZAk7HFHCeBVZLZUDEos",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "gen-lang-client-0136452922.firebaseapp.com",
-  firestoreDatabaseId: import.meta.env.VITE_FIREBASE_DATABASE_ID || "ai-studio-64f08644-139c-4c05-94d3-6bec1fa37960",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "gen-lang-client-0136452922.firebasestorage.app",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "183619724391",
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || ""
+  apiKey: "AIzaSyDXWb0kB9jeNqFqZAk7HFHCeBVZLZUDEos",
+  authDomain: "gen-lang-client-0136452922.firebaseapp.com",
+  projectId: "gen-lang-client-0136452922",
+  storageBucket: "gen-lang-client-0136452922.firebasestorage.app",
+  messagingSenderId: "183619724391",
+  appId: "1:183619724391:web:511bfeaf09b8e7de49e0c2"
 };
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+export const db = getFirestore(app);
 
 export enum OperationType {
   CREATE = 'create',
