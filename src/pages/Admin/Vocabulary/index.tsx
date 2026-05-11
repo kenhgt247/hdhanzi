@@ -151,7 +151,8 @@ export function AdminVocabulary() {
           type="vocabulary"
           onSave={async (v) => {
             const arr = Array.isArray(v) ? v : [v];
-            await adminService.importVocabularyBatch(arr);
+            const res = await adminService.importVocabularyBatch(arr);
+            if (!res.success) throw new Error(String(res.error));
             fetchVocabularies();
           }} 
           onClose={() => setShowAICreator(false)} 

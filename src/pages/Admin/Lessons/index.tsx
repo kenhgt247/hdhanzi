@@ -138,7 +138,8 @@ export function AdminLessons() {
           type="lessons"
           onSave={async (v) => {
             const arr = Array.isArray(v) ? v : [v];
-            await adminService.importLessonsBatch(arr);
+            const res = await adminService.importLessonsBatch(arr);
+            if (!res.success) throw new Error(String(res.error));
             fetchLessons();
           }} 
           onClose={() => setShowAICreator(false)} 

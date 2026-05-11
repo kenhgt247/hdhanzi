@@ -89,7 +89,7 @@ export function Vocabulary() {
               <ArrowLeft className="w-5 h-5" /> Trở về
            </button>
            
-           <div className="flex w-full items-center bg-gray-100 p-1.5 rounded-xl overflow-x-auto scrollbar-hide gap-1 flex-nowrap">
+           <div className="flex w-full sm:w-auto flex-1 items-center bg-gray-100 p-1.5 rounded-xl overflow-x-auto sm:overflow-visible sm:flex-wrap scrollbar-hide gap-1 flex-nowrap sm:justify-center">
               <button 
                 onClick={() => setPracticeMode('flashcard')} 
                 className={cn("whitespace-nowrap flex-shrink-0 px-3 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5", practiceMode === 'flashcard' ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700")}

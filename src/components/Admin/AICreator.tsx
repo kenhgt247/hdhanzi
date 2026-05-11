@@ -103,7 +103,9 @@ export function AICreator({ type = 'vocabulary', onSave, onClose }: AICreatorPro
     }
     if (type === 'mock-tests') {
       return {
-        prompt: `Extract mock test questions. Provide a JSON array. Each test has a title, level, durationMinutes, and an array of questions. Each question has text, type (reading, listening, vocab), options (array of strings), and correctOptionIndex (integer).`,
+        prompt: `Extract mock test questions from the document/image. Provide a JSON array. 
+CRITICAL: You MUST extract ALL questions present, including BOTH listening (phần nghe) and reading (phần đọc) questions. Do not skip any section!
+Each test has a title, level, durationMinutes, and an array of questions. Each question MUST have 'question' (the text of the question), 'type' (either 'reading' or 'listening'), 'options' (array of strings), and 'correctAnswer' (string, MUST exactly match one of the options).`,
         schema: {
           type: Type.ARRAY,
           items: {
@@ -117,13 +119,13 @@ export function AICreator({ type = 'vocabulary', onSave, onClose }: AICreatorPro
                 items: {
                   type: Type.OBJECT,
                   properties: {
-                    text: { type: Type.STRING },
+                    question: { type: Type.STRING },
                     type: { type: Type.STRING },
                     options: { type: Type.ARRAY, items: { type: Type.STRING } },
-                    correctOptionIndex: { type: Type.INTEGER },
+                    correctAnswer: { type: Type.STRING },
                     explanation: { type: Type.STRING }
                   },
-                  required: ["text", "type", "options", "correctOptionIndex"]
+                  required: ["question", "type", "options", "correctAnswer"]
                 }
               }
             },
@@ -220,6 +222,9 @@ Each object represents a lesson with title, topic, duration, stage, sentencePatt
       });
 
       const data = JSON.parse(response.text || '[]');
+      if (Array.isArray(data) && type === 'mock-tests') {
+        data.forEach((test, idx) => console.log(`Test ${idx} extracted ${test.questions?.length || 0} questions.`));
+      }
       setResult(data);
     } catch (error) {
       console.error('AI Error:', error);
@@ -231,13 +236,19 @@ Each object represents a lesson with title, topic, duration, stage, sentencePatt
   const handleSave = async () => {
     if (!result) return;
     setIsSaving(true);
-    await onSave(result);
-    setSaved(true);
-    setIsSaving(false);
-    setResult(null);
-    setInput('');
-    setFile(null);
-    setFilePreview(null);
+    try {
+      await onSave(result);
+      setSaved(true);
+      setResult(null);
+      setInput('');
+      setFile(null);
+      setFilePreview(null);
+    } catch (error: any) {
+      console.error("Save error:", error);
+      alert("Có lỗi xảy ra khi lưu: " + (error.message || String(error)));
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (

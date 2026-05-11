@@ -137,7 +137,8 @@ export function AdminDialogues() {
           type="dialogues"
           onSave={async (v) => {
             const arr = Array.isArray(v) ? v : [v];
-            await adminService.importDialoguesBatch(arr);
+            const res = await adminService.importDialoguesBatch(arr);
+            if (!res.success) throw new Error(String(res.error));
             fetchDialogues();
           }} 
           onClose={() => setShowAICreator(false)} 

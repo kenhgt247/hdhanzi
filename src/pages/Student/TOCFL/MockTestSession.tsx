@@ -13,7 +13,6 @@ import {
   LayoutGrid,
   X
 } from 'lucide-react';
-import { getMockTestById } from '../../../data/mockTests';
 import { mockTestService } from '../../../services/mockTestService';
 import { weakWordsService } from '../../../services/weakWordsService';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -34,14 +33,21 @@ export function MockTestSession() {
   const [showQuestionSheet, setShowQuestionSheet] = useState(false);
 
   useEffect(() => {
-    const t = getMockTestById(testId || '');
-    if (t) {
-      setTest(t);
-      setTimeLeft(t.durationMinutes * 60);
-    } else {
-      navigate('/student/tocfl');
+    async function loadTest() {
+      if (!testId) {
+        navigate('/student/tocfl');
+        return;
+      }
+      const t = await mockTestService.getMockTestById(testId);
+      if (t) {
+        setTest(t);
+        setTimeLeft(t.durationMinutes * 60);
+      } else {
+        navigate('/student/tocfl');
+      }
     }
-  }, [testId]);
+    loadTest();
+  }, [testId, navigate]);
 
   useEffect(() => {
     if (timeLeft <= 0) {
@@ -234,7 +240,7 @@ export function MockTestSession() {
           <div className="grid grid-cols-5 gap-2">
             {test.questions.map((q, i) => (
               <button
-                key={q.id}
+                key={`${q.id || 'q'}-${i}`}
                 onClick={() => setCurrentIdx(i)}
                 className={cn(
                   "w-10 h-10 rounded-xl text-xs font-bold transition-all",
@@ -348,7 +354,7 @@ export function MockTestSession() {
                 <div className="grid grid-cols-5 gap-3 mb-6">
                   {test.questions.map((q, i) => (
                     <button
-                      key={q.id}
+                      key={`${q.id || 'q'}-${i}`}
                       onClick={() => {
                         setCurrentIdx(i);
                         setShowQuestionSheet(false);

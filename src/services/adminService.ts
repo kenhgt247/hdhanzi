@@ -18,6 +18,15 @@ import { MockTest, MockTestResult, WeakWord } from '../types/study';
 import { Lesson } from '../types/lesson';
 import { Vocab } from '../data/vocabulary';
 
+const withTimeout = <T>(promise: Promise<T>, ms = 25000): Promise<T> => {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) => 
+      setTimeout(() => reject(new Error('Firebase không phản hồi. Điều này thường do bạn đã CHẠM GIỚI HẠN QUOTA miễn phí của Firebase (hoặc mất kết nối mạng). Hãy kiểm tra Firebase Console hoặc thử lại vào ngày mai.')), ms)
+    )
+  ]);
+};
+
 export interface StudentStats {
   id: string;
   name: string;
@@ -56,16 +65,25 @@ export const adminService = {
 
   async getInactiveStudents(days = 3) {
     try {
-      const threshold = new Date();
-      threshold.setDate(threshold.getDate() - days);
+      const thresholdDate = new Date();
+      thresholdDate.setDate(thresholdDate.getDate() - days);
+      const thresholdTimestamp = Timestamp.fromDate(thresholdDate).toMillis();
       
       const q = query(
         collection(db, 'users'), 
-        where('role', '==', 'student'),
-        where('lastLoginAt', '<', Timestamp.fromDate(threshold))
+        where('role', '==', 'student')
       );
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as StudentStats));
+      const allStudents = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as StudentStats));
+      
+      return allStudents.filter(student => {
+        if (!student.lastLoginAt) return true; // if never logged in, consider inactive
+        // lastLoginAt might be a Firestore Timestamp or Date string
+        const loginTime = (student.lastLoginAt as any).toMillis 
+          ? (student.lastLoginAt as any).toMillis() 
+          : new Date(student.lastLoginAt as any).getTime();
+        return loginTime < thresholdTimestamp;
+      });
     } catch (error) {
       console.error('Error getting inactive students:', error);
       return [];
@@ -176,7 +194,8 @@ export const adminService = {
   async importVocabularyBatch(vocabularies: Partial<Vocab>[]) {
     try {
       const batch = writeBatch(db);
-      vocabularies.forEach(vocab => {
+      const sanitized = JSON.parse(JSON.stringify(vocabularies));
+      sanitized.forEach((vocab: any) => {
         const docRef = doc(collection(db, 'vocabulary'));
         batch.set(docRef, {
           ...vocab,
@@ -185,7 +204,7 @@ export const adminService = {
           status: vocab.status || 'new'
         });
       });
-      await batch.commit();
+      await withTimeout(batch.commit());
       return { success: true, count: vocabularies.length };
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, 'vocabulary');
@@ -302,7 +321,8 @@ export const adminService = {
   async importLessonsBatch(lessons: Partial<Lesson>[]) {
     try {
       const batch = writeBatch(db);
-      lessons.forEach(lesson => {
+      const sanitized = JSON.parse(JSON.stringify(lessons));
+      sanitized.forEach((lesson: any) => {
         const docRef = doc(collection(db, 'lessons'));
         batch.set(docRef, {
           ...lesson,
@@ -310,7 +330,7 @@ export const adminService = {
           createdAt: Timestamp.now()
         });
       });
-      await batch.commit();
+      await withTimeout(batch.commit());
       return { success: true, count: lessons.length };
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, 'lessons');
@@ -428,16 +448,25 @@ export const adminService = {
 
   async importMockTestsBatch(tests: Partial<MockTest>[]) {
     try {
-      const batch = writeBatch(db);
-      tests.forEach(test => {
-        const docRef = doc(collection(db, 'mockTests'));
-        batch.set(docRef, {
-          ...test,
-          id: docRef.id,
-          createdAt: Timestamp.now()
-        });
+      // Remove undefined values to prevent Firestore errors
+      const sanitizedTests = JSON.parse(JSON.stringify(tests));
+      
+      const promises = sanitizedTests.map(async (test: any, index: number) => {
+        try {
+          const docRef = doc(collection(db, 'mockTests'));
+          await setDoc(docRef, {
+            ...test,
+            id: docRef.id,
+            createdAt: Timestamp.now()
+          });
+          return docRef.id;
+        } catch (err: any) {
+          console.error(`Error saving test ${index}:`, err);
+          throw new Error(`Test ${index} failed: ${err.message || String(err)}`);
+        }
       });
-      await batch.commit();
+      
+      await withTimeout(Promise.all(promises));
       return { success: true, count: tests.length };
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, 'mockTests');
@@ -448,7 +477,8 @@ export const adminService = {
   async importDialoguesBatch(dialogues: any[]) {
     try {
       const batch = writeBatch(db);
-      dialogues.forEach(dialogue => {
+      const sanitized = JSON.parse(JSON.stringify(dialogues));
+      sanitized.forEach((dialogue: any) => {
         const docRef = doc(collection(db, 'dialogues'));
         batch.set(docRef, {
           ...dialogue,
@@ -456,7 +486,7 @@ export const adminService = {
           createdAt: Timestamp.now()
         });
       });
-      await batch.commit();
+      await withTimeout(batch.commit());
       return { success: true, count: dialogues.length };
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, 'dialogues');

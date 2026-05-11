@@ -13,7 +13,6 @@ import {
 } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
 import { mockTestService } from '../../../services/mockTestService';
-import { getMockTestById } from '../../../data/mockTests';
 import { MockTestResult, MockTest } from '../../../types/study';
 import { useAuth } from '../../../contexts/AuthContext';
 import { cn } from '../../../lib/utils';
@@ -34,7 +33,7 @@ export function MockTestResultPage() {
       
       if (localResult) {
         setResult(localResult);
-        const t = getMockTestById(localResult.testId);
+        const t = await mockTestService.getMockTestById(localResult.testId);
         if (t) setTest(t);
         setLoading(false);
         return;
@@ -49,7 +48,7 @@ export function MockTestResultPage() {
       const res = await mockTestService.getResult(user.id, resultId);
       if (res) {
         setResult(res);
-        const t = getMockTestById(res.testId);
+        const t = await mockTestService.getMockTestById(res.testId);
         if (t) setTest(t);
       }
       setLoading(false);

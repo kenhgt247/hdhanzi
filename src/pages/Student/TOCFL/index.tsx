@@ -1,13 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FileText, Clock, AlertCircle, ExternalLink, Globe, ChevronRight, Trophy, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { MOCK_TESTS } from '../../../data/mockTests';
+import { mockTestService } from '../../../services/mockTestService';
+import { MockTest } from '../../../types/study';
 import { cn } from '../../../lib/utils';
 
 export function TOCFL() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'mock' | 'sctop'>('mock');
+  const [mockTests, setMockTests] = useState<MockTest[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadTests() {
+      const tests = await mockTestService.getMockTests();
+      setMockTests(tests);
+      setLoading(false);
+    }
+    loadTests();
+  }, []);
 
   return (
     <div className="space-y-6 h-full flex flex-col pb-20 md:pb-0">
@@ -46,7 +58,9 @@ export function TOCFL() {
       {activeTab === 'mock' && (
         <div className="flex-1 overflow-y-auto pb-6">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-6">
-            {MOCK_TESTS.map((test, index) => (
+            {loading ? (
+              <div className="col-span-full py-12 text-center text-gray-500">Đang tải đề thi...</div>
+            ) : mockTests.map((test, index) => (
               <motion.div
                 key={test.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -76,7 +90,7 @@ export function TOCFL() {
                   </div>
                   <div className="flex items-center gap-2">
                     <Trophy className="w-4 h-4" />
-                    <span>{test.questions.length} Câu hỏi</span>
+                    <span>{test.questions?.length || 0} Câu hỏi</span>
                   </div>
                 </div>
 

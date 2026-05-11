@@ -136,8 +136,16 @@ export function AdminMockTests() {
         <AICreator 
           type="mock-tests"
           onSave={async (v) => {
-            const arr = Array.isArray(v) ? v : [v];
-            await adminService.importMockTestsBatch(arr);
+            let arr = Array.isArray(v) ? v : [v];
+            arr = arr.map(test => ({
+              ...test,
+              questions: (test.questions || []).map((q: any, i: number) => ({
+                id: q.id || `q-${Date.now()}-${i}`,
+                ...q
+              }))
+            }));
+            const res = await adminService.importMockTestsBatch(arr);
+            if (!res.success) throw new Error(String(res.error));
             fetchTests();
           }} 
           onClose={() => setShowAICreator(false)} 
