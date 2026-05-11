@@ -85,12 +85,20 @@ export function LessonDetail() {
   };
 
   const handleAnswerChange = (questionId: string, value: string) => {
-    if (showResults) return; // Prevent changing answers after submit
-    console.log(`[Quiz] Question ${questionId} selected answer: ${value}`);
-    setAnswers(prev => ({ ...prev, [questionId]: value }));
+    if (showResults) {
+      console.log(`[Quiz] handleAnswerChange blocked: showResults is true`);
+      return;
+    }
+    console.log(`[Quiz] Question ${questionId} selecting: ${value}`);
+    setAnswers(prev => {
+      const newAnswers = { ...prev, [questionId]: value };
+      console.log('[Quiz] Current answers state:', newAnswers);
+      return newAnswers;
+    });
   };
 
   const handleSubmit = () => {
+    console.log('[Quiz] Submit clicked. Current answers:', answers);
     if (!lesson) return;
     
     const allQuestions = [
@@ -100,6 +108,7 @@ export function LessonDetail() {
     ];
     
     const answeredCount = Object.keys(answers).length;
+    console.log(`[Quiz] Answered ${answeredCount} out of ${allQuestions.length}`);
     if (answeredCount < allQuestions.length) {
       const confirmSubmit = window.confirm(`Bạn mới trả lời ${answeredCount}/${allQuestions.length} câu hỏi. Bạn có chắc chắn muốn nộp bài không?`);
       if (!confirmSubmit) return;
@@ -110,10 +119,7 @@ export function LessonDetail() {
       const isCorrect = answers[q.id]?.trim().toLowerCase() === q.correctAnswer.trim().toLowerCase();
       if (isCorrect) {
         correctCount++;
-      } else if (user?.id) {
-        // Find which vocab this question belongs to if possible
-        // But since QuizQuestion doesn't have a direct link to vocab, we use the character if it's in the question/options
-        // Or we just try to find if the correct answer matches any vocabulary item
+      } else if (user?.id && user.id !== 'guest') {
         const matchingVocab = lesson.vocabulary.find(v => 
           v.traditional === q.correctAnswer || 
           v.vietnamese === q.correctAnswer ||
@@ -121,7 +127,6 @@ export function LessonDetail() {
         );
 
         if (matchingVocab) {
-          // Determine mistake type: if it's from lesson.listening it's 'listening', otherwise default to 'meaning'
           const isListeningQuestion = lesson.listening?.questions.some(lq => lq.id === q.id);
           
           weakWordsService.recordMistake(user.id, {
@@ -136,6 +141,7 @@ export function LessonDetail() {
     });
 
     const passed = (correctCount / allQuestions.length) >= 0.8;
+    console.log(`[Quiz] Result: ${correctCount}/${allQuestions.length} - ${passed ? 'PASSED' : 'FAILED'}`);
     setScoreInfo({ score: correctCount, total: allQuestions.length, passed });
     setShowResults(true);
     
@@ -177,22 +183,24 @@ export function LessonDetail() {
                       <button 
                         key={optIdx} 
                         type="button"
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
                           handleAnswerChange(q.id, opt);
                         }}
                         disabled={showResults}
                         className={cn(
                           optClass,
-                          "w-full text-left appearance-none"
+                          "w-full text-left relative z-10"
                         )}
                       >
                         <div className={cn(
-                          "w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors",
+                          "w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors pointer-events-none",
                           answers[q.id] === opt ? "border-blue-600 bg-blue-600 shadow-sm" : "border-gray-300 bg-white"
                         )}>
                           {answers[q.id] === opt && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                         </div>
-                        <span className="text-gray-800 font-medium">{opt}</span>
+                        <span className="text-gray-800 font-medium pointer-events-none">{opt}</span>
                       </button>
                     )
                   })}
@@ -213,22 +221,24 @@ export function LessonDetail() {
                       <button 
                         key={optIdx} 
                         type="button"
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
                           handleAnswerChange(q.id, opt);
                         }}
                         disabled={showResults}
                         className={cn(
                           optClass,
-                          "appearance-none"
+                          "relative z-10"
                         )}
                       >
                         <div className={cn(
-                          "w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors",
+                          "w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors pointer-events-none",
                           answers[q.id] === opt ? "border-blue-600 bg-blue-600 shadow-sm" : "border-gray-300 bg-white"
                         )}>
                           {answers[q.id] === opt && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                         </div>
-                        <span className="text-gray-800 font-medium">{opt}</span>
+                        <span className="text-gray-800 font-medium pointer-events-none">{opt}</span>
                       </button>
                     )
                   })}
@@ -343,7 +353,7 @@ export function LessonDetail() {
         ))}
       </div>
 
-      <div className="pt-4 pb-20">
+      <div className="pt-4 pb-20 relative z-30">
         
         {/* TAB TỪ VỰNG */}
         {activeTab === 'vocab' && (
