@@ -16,7 +16,7 @@ type PracticeMode = 'flashcard' | 'quiz' | 'listening' | 'listening_writing' | '
 export function Vocabulary() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { addLearnedWords } = useStudyProgress();
+  const { addLearnedWord, learnedWordIds } = useStudyProgress();
   const [selectedLevel, setSelectedLevel] = useState<string>('B2');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 30;
@@ -62,8 +62,12 @@ export function Vocabulary() {
     }
   };
 
+  const activeVocab = useMemo(() => paginatedVocabs[currentIndex], [paginatedVocabs, currentIndex]);
+
   const handleRemembered = () => {
-    addLearnedWords(1);
+    if (activeVocab) {
+      addLearnedWord(activeVocab.id);
+    }
     handleNext();
   };
 
@@ -278,28 +282,55 @@ export function Vocabulary() {
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {paginatedVocabs.map((vocab, i) => (
-             <div 
-               key={vocab.id || i} 
-               className="bg-white border border-gray-100 rounded-2xl p-5 hover:shadow-lg hover:-translate-y-1 hover:border-blue-100 transition-all flex flex-col group cursor-pointer h-full"
-               onClick={() => { setCurrentIndex(i); handleStartPractice('flashcard'); }}
-             >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="text-2xl font-black text-gray-900">{vocab.traditional}</div>
-                  <div className="px-2 py-0.5 bg-blue-50 text-blue-600 text-xs font-bold rounded-md uppercase tracking-wider">
-                    {vocab.type || 'N'}
-                  </div>
-                </div>
-                <div className="text-sm text-gray-400 font-mono mb-4 bg-gray-50 rounded-lg px-2 py-1 self-start">{vocab.pinyin}</div>
-                <div className="text-base text-gray-700 font-medium leading-snug mb-5 flex-grow">
-                  {vocab.vietnamese}
-                </div>
-                <div className="flex flex-wrap items-center gap-2 mt-auto border-t border-gray-50 pt-4">
-                   <span className="px-2.5 py-1 bg-gray-50 text-gray-500 text-xs font-semibold rounded-lg border border-gray-100">#tocfl{vocab.level?.toLowerCase() || 'level'}</span>
-                   <span className="px-2.5 py-1 bg-gray-50 text-gray-500 text-xs font-semibold rounded-lg border border-gray-100">#bài{Math.floor(((currentPage - 1) * itemsPerPage + i)/15)+1}</span>
-                </div>
-             </div>
-          ))}
+          {paginatedVocabs.map((vocab, i) => {
+             const isLearned = learnedWordIds.includes(vocab.id);
+             
+             return (
+              <div 
+                key={vocab.id || i} 
+                className={cn(
+                  "bg-white border rounded-2xl p-5 hover:shadow-lg hover:-translate-y-1 transition-all flex flex-col group cursor-pointer h-full relative overflow-hidden",
+                  isLearned ? "border-emerald-100 bg-emerald-50/30 shadow-inner" : "border-gray-100 shadow-sm"
+                )}
+                onClick={() => { setCurrentIndex(i); handleStartPractice('flashcard'); }}
+              >
+                 {isLearned && (
+                   <div className="absolute top-0 right-0 px-3 py-1 bg-emerald-500 text-white rounded-bl-xl shadow-sm z-10">
+                     <CheckCircle2 className="w-3.5 h-3.5" />
+                   </div>
+                 )}
+                 <div className="flex items-start justify-between mb-3">
+                   <div className={cn(
+                     "text-2xl font-black",
+                     isLearned ? "text-emerald-800" : "text-gray-900"
+                   )}>{vocab.traditional}</div>
+                   <div className={cn(
+                     "px-2 py-0.5 text-xs font-bold rounded-md uppercase tracking-wider",
+                     isLearned ? "bg-emerald-100 text-emerald-600" : "bg-blue-50 text-blue-600"
+                   )}>
+                     {vocab.type || 'N'}
+                   </div>
+                 </div>
+                 <div className="text-sm text-gray-400 font-mono mb-4 bg-gray-50 rounded-lg px-2 py-1 self-start">{vocab.pinyin}</div>
+                 <div className={cn(
+                   "text-base font-medium leading-snug mb-5 flex-grow",
+                   isLearned ? "text-emerald-700/80" : "text-gray-700"
+                 )}>
+                   {vocab.vietnamese}
+                 </div>
+                 <div className="flex flex-wrap items-center gap-2 mt-auto border-t border-gray-50 pt-4">
+                    <span className={cn(
+                      "px-2.5 py-1 text-xs font-semibold rounded-lg border",
+                      isLearned ? "bg-emerald-50 text-emerald-500 border-emerald-100" : "bg-gray-50 text-gray-500 border-gray-100"
+                    )}>#tocfl{vocab.level?.toLowerCase() || 'level'}</span>
+                    <span className={cn(
+                      "px-2.5 py-1 text-xs font-semibold rounded-lg border",
+                      isLearned ? "bg-emerald-50 text-emerald-500 border-emerald-100" : "bg-gray-50 text-gray-500 border-gray-100"
+                    )}>#bài{Math.floor(((currentPage - 1) * itemsPerPage + i)/15)+1}</span>
+                 </div>
+              </div>
+             );
+          })}
         </div>
         
         {totalPages > 1 && (

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Volume2, CheckCircle, ChevronRight, Headphones, BookOpen, PenTool, XCircle } from 'lucide-react';
+import { ArrowLeft, Volume2, CheckCircle, ChevronRight, Headphones, BookOpen, PenTool, XCircle, CheckCircle2 } from 'lucide-react';
 import { cn } from '../../../lib/utils';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useStudyProgress } from '../../../contexts/StudyProgressContext';
@@ -16,7 +16,7 @@ export function LessonDetail() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const { setLastLessonId } = useStudyProgress();
+  const { setLastLessonId, addCompletedLesson, completedLessonIds } = useStudyProgress();
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [activeTab, setActiveTab] = useState<'vocab' | 'writing' | 'patterns' | 'speaking' | 'grammar' | 'reading' | 'listening' | 'quiz'>('vocab');
 
@@ -135,6 +135,11 @@ export function LessonDetail() {
     const passed = (correctCount / allQuestions.length) >= 0.8;
     setScoreInfo({ score: correctCount, total: allQuestions.length, passed });
     setShowResults(true);
+    
+    if (passed && lesson?.id) {
+       addCompletedLesson(lesson.id);
+    }
+    
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -157,6 +162,7 @@ export function LessonDetail() {
               {q.type === 'multiple_choice' && q.options && (
                 <div className="space-y-2">
                   {q.options.map((opt, optIdx) => {
+                     const optId = `q_${q.id}_opt_${optIdx}`;
                      let optClass = "flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition ";
                      if (showResults) {
                        if (opt === q.correctAnswer) optClass += "border-green-500 bg-green-100 font-bold ";
@@ -166,17 +172,21 @@ export function LessonDetail() {
                        optClass += answers[q.id] === opt ? "border-blue-600 bg-blue-50" : "hover:bg-gray-50 bg-white";
                      }
                      return (
-                      <label key={optIdx} className={optClass}>
+                      <label key={optIdx} htmlFor={optId} className={optClass}>
                         <input 
+                          id={optId}
                           type="radio" 
                           name={`quiz_${q.id}`} 
                           value={opt} 
                           checked={answers[q.id] === opt}
-                          onChange={(e) => handleAnswerChange(q.id, e.target.value)}
+                          onChange={(e) => {
+                            console.log(`Setting answer for ${q.id} to ${e.target.value}`);
+                            handleAnswerChange(q.id, e.target.value);
+                          }}
                           disabled={showResults}
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500" 
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 cursor-pointer" 
                         />
-                        <span className="text-gray-800">{opt}</span>
+                        <span className="text-gray-800 font-medium">{opt}</span>
                       </label>
                     )
                   })}
@@ -185,6 +195,7 @@ export function LessonDetail() {
               {q.type === 'true_false' && q.options && (
                 <div className="flex gap-4">
                   {q.options.map((opt, optIdx) => {
+                     const optId = `q_${q.id}_opt_${optIdx}`;
                      let optClass = "flex-1 flex items-center justify-center gap-3 p-3 rounded-lg border cursor-pointer transition ";
                      if (showResults) {
                        if (opt === q.correctAnswer) optClass += "border-green-500 bg-green-100 font-bold ";
@@ -194,17 +205,21 @@ export function LessonDetail() {
                        optClass += answers[q.id] === opt ? "border-blue-600 bg-blue-50" : "hover:bg-gray-50 bg-white";
                      }
                      return (
-                      <label key={optIdx} className={optClass}>
+                      <label key={optIdx} htmlFor={optId} className={optClass}>
                         <input 
+                          id={optId}
                           type="radio" 
                           name={`quiz_${q.id}`} 
                           value={opt} 
                           checked={answers[q.id] === opt}
-                          onChange={(e) => handleAnswerChange(q.id, e.target.value)}
+                          onChange={(e) => {
+                            console.log(`Setting TF answer for ${q.id} to ${e.target.value}`);
+                            handleAnswerChange(q.id, e.target.value);
+                          }}
                           disabled={showResults}
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500" 
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 cursor-pointer" 
                         />
-                        <span className="text-gray-800">{opt}</span>
+                        <span className="text-gray-800 font-medium">{opt}</span>
                       </label>
                     )
                   })}
@@ -264,7 +279,15 @@ export function LessonDetail() {
             <ArrowLeft className="w-5 h-5 text-gray-600" />
           </div>
           <div>
-            <div className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-1">{lesson.stage}</div>
+            <div className="flex items-center gap-2 mb-1">
+              <div className="text-xs font-bold text-blue-600 uppercase tracking-widest">{lesson.stage}</div>
+              {completedLessonIds.includes(lesson.id) && (
+                <div className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-lg text-[10px] font-black border border-emerald-200 shadow-sm shadow-emerald-50">
+                  <CheckCircle2 className="w-3 h-3" />
+                  ĐÃ HOÀN THÀNH
+                </div>
+              )}
+            </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">{lesson.title}</h1>
             <p className="text-gray-500 mt-1 font-medium">{lesson.topic}</p>
           </div>

@@ -19,11 +19,13 @@ interface StudyProgressData {
   totalWordsLearned: number;
   todayStats: DailyStats;
   lastLessonId: string | null;
+  learnedWordIds: string[];
+  completedLessonIds: string[];
   setLastLessonId: (id: string) => void;
   markAttendance: () => void;
   addStudyTime: (minutes: number) => void;
-  addLearnedWords: (count: number) => void;
-  addCompletedLessons: (count: number) => void;
+  addLearnedWord: (id: string) => void;
+  addCompletedLesson: (id: string) => void;
 }
 
 const defaultContext: StudyProgressData = {
@@ -35,11 +37,13 @@ const defaultContext: StudyProgressData = {
   totalWordsLearned: 0,
   todayStats: { date: '', minutesStudied: 0, wordsLearned: 0, lessonsCompleted: 0 },
   lastLessonId: null,
+  learnedWordIds: [],
+  completedLessonIds: [],
   setLastLessonId: () => {},
   markAttendance: () => {},
   addStudyTime: () => {},
-  addLearnedWords: () => {},
-  addCompletedLessons: () => {},
+  addLearnedWord: () => {},
+  addCompletedLesson: () => {},
 };
 
 const StudyProgressContext = createContext<StudyProgressData>(defaultContext);
@@ -58,6 +62,8 @@ export const StudyProgressProvider = ({ children }: { children: ReactNode }) => 
   const [currentStreak, setCurrentStreak] = useState(0);
   const [lastActiveDate, setLastActiveDate] = useState<string | null>(null);
   const [lastLessonId, setLastLessonIdState] = useState<string | null>(null);
+  const [learnedWordIds, setLearnedWordIds] = useState<string[]>([]);
+  const [completedLessonIds, setCompletedLessonIds] = useState<string[]>([]);
   const syncingRef = useRef(false);
 
   // Today's date string
@@ -73,6 +79,8 @@ export const StudyProgressProvider = ({ children }: { children: ReactNode }) => 
         setCurrentStreak(parsed.currentStreak || 0);
         setLastActiveDate(parsed.lastActiveDate || null);
         setLastLessonIdState(parsed.lastLessonId || null);
+        setLearnedWordIds(parsed.learnedWordIds || []);
+        setCompletedLessonIds(parsed.completedLessonIds || []);
         if (parsed.targetLevel) setTargetLevelState(parsed.targetLevel);
       } catch (e) {
         console.error('Failed to parse study stats', e);
@@ -94,6 +102,8 @@ export const StudyProgressProvider = ({ children }: { children: ReactNode }) => 
           if (data.currentStreak !== undefined) setCurrentStreak(data.currentStreak);
           if (data.lastActiveDate) setLastActiveDate(data.lastActiveDate);
           if (data.lastLessonId) setLastLessonIdState(data.lastLessonId);
+          if (data.learnedWordIds) setLearnedWordIds(data.learnedWordIds || []);
+          if (data.completedLessonIds) setCompletedLessonIds(data.completedLessonIds || []);
           if (data.dailyStats) setDailyStats(data.dailyStats || {});
           syncingRef.current = false;
         }
@@ -115,6 +125,8 @@ export const StudyProgressProvider = ({ children }: { children: ReactNode }) => 
       currentStreak,
       lastActiveDate,
       lastLessonId,
+      learnedWordIds,
+      completedLessonIds,
       targetLevel
     };
     localStorage.setItem('studyStats', JSON.stringify(dataToSave));
@@ -127,6 +139,8 @@ export const StudyProgressProvider = ({ children }: { children: ReactNode }) => 
         currentStreak,
         lastActiveDate,
         lastLessonId,
+        learnedWordIds,
+        completedLessonIds,
         dailyStats: dailyStats, // Syncing the map for now since it's relatively small
         updatedAt: serverTimestamp()
       }).catch(e => {
@@ -190,22 +204,28 @@ export const StudyProgressProvider = ({ children }: { children: ReactNode }) => 
     }));
   };
 
-  const addLearnedWords = (count: number) => {
+  const addLearnedWord = (id: string) => {
+    if (learnedWordIds.includes(id)) return;
+    
+    setLearnedWordIds(prev => [...prev, id]);
     setDailyStats(prev => ({
       ...prev,
       [todayStr]: {
         ...(prev[todayStr] || { date: todayStr, minutesStudied: 0, wordsLearned: 0, lessonsCompleted: 0 }),
-        wordsLearned: (prev[todayStr]?.wordsLearned || 0) + count
+        wordsLearned: (prev[todayStr]?.wordsLearned || 0) + 1
       }
     }));
   };
 
-  const addCompletedLessons = (count: number) => {
+  const addCompletedLesson = (id: string) => {
+    if (completedLessonIds.includes(id)) return;
+
+    setCompletedLessonIds(prev => [...prev, id]);
     setDailyStats(prev => ({
       ...prev,
       [todayStr]: {
         ...(prev[todayStr] || { date: todayStr, minutesStudied: 0, wordsLearned: 0, lessonsCompleted: 0 }),
-        lessonsCompleted: (prev[todayStr]?.lessonsCompleted || 0) + count
+        lessonsCompleted: (prev[todayStr]?.lessonsCompleted || 0) + 1
       }
     }));
   };
@@ -232,11 +252,13 @@ export const StudyProgressProvider = ({ children }: { children: ReactNode }) => 
       totalWordsLearned,
       todayStats,
       lastLessonId,
+      learnedWordIds,
+      completedLessonIds,
       setLastLessonId,
       markAttendance,
       addStudyTime,
-      addLearnedWords,
-      addCompletedLessons
+      addLearnedWord,
+      addCompletedLesson
     }}>
       {children}
     </StudyProgressContext.Provider>

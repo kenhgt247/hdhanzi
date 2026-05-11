@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { PlayCircle, CheckCircle, Lock, BookOpen, Target, Compass, Award, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useStudyProgress } from '../../../contexts/StudyProgressContext';
 import { cn } from '../../../lib/utils';
 import { getLessons, fetchLessons } from '../../../services/lessonService';
 import { Lesson } from '../../../types/lesson';
@@ -10,6 +11,7 @@ import { motion } from 'motion/react';
 export function Lessons() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { completedLessonIds, currentStreak } = useStudyProgress();
   const [lessons, setLessons] = useState<Lesson[]>([]);
   
   useEffect(() => {
@@ -34,6 +36,8 @@ export function Lessons() {
   
   const currentStages = stages.slice((currentPage - 1) * stagesPerPage, currentPage * stagesPerPage);
 
+  const progressPercent = lessons.length > 0 ? Math.round((completedLessonIds.length / lessons.length) * 100) : 0;
+
   return (
     <div className="mx-auto max-w-5xl space-y-10 pb-12">
       {/* Header Info */}
@@ -47,11 +51,11 @@ export function Lessons() {
         </div>
         <div className="hidden md:flex items-center gap-3 bg-white p-2 rounded-2xl border border-gray-100 shadow-sm">
            <div className="px-4 py-2 bg-blue-50 text-blue-600 rounded-xl font-bold flex flex-col items-center justify-center">
-             <span className="text-xl leading-none mb-1">0%</span>
+             <span className="text-xl leading-none mb-1">{progressPercent}%</span>
              <span className="text-[10px] uppercase tracking-wider opacity-80">Tiến độ</span>
            </div>
            <div className="px-4 py-2 bg-amber-50 text-amber-600 rounded-xl font-bold flex flex-col items-center justify-center">
-             <span className="text-xl leading-none mb-1">0</span>
+             <span className="text-xl leading-none mb-1">{currentStreak}</span>
              <span className="text-[10px] uppercase tracking-wider opacity-80">Ngày chuỗi</span>
            </div>
         </div>
@@ -109,9 +113,9 @@ export function Lessons() {
               
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {stageLessons.map((lesson) => {
-                  const isCompleted = false; // mock
-                  const isCurrent = false; // mock logic
-                  const isLocked = false; // mock logic
+                  const isCompleted = completedLessonIds.includes(lesson.id);
+                  const isCurrent = !isCompleted && (completedLessonIds.length === 0 ? lesson.day === 1 : true); // simple logic
+                  const isLocked = false; 
                   
                   return (
                     <motion.div 
