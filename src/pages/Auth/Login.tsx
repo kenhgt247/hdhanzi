@@ -29,13 +29,15 @@ export function Login() {
       setError(null);
       setIsSubmitting(true);
       await signInWithGoogle();
+      // On success, the onAuthStateChanged in AuthContext will handle navigation
     } catch (err: any) {
       if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
         setError('Bạn đã huỷ đăng nhập. Vui lòng thử lại.');
       } else {
         setError(err.message || 'Đã xảy ra lỗi khi xác thực bằng Google.');
       }
-      setIsSubmitting(false); // Only set to false on error, because on success it will redirect
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
