@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Volume2, CheckCircle, ChevronRight, Headphones, BookOpen, PenTool, XCircle, CheckCircle2 } from 'lucide-react';
 import { cn } from '../../../lib/utils';
@@ -18,6 +18,7 @@ export function LessonDetail() {
   const location = useLocation();
   const { setLastLessonId, addCompletedLesson, completedLessonIds } = useStudyProgress();
   const [lesson, setLesson] = useState<Lesson | null>(null);
+  const loadingIdRef = useRef<string | null>(null);
   const [activeTab, setActiveTab] = useState<'vocab' | 'writing' | 'patterns' | 'speaking' | 'grammar' | 'reading' | 'listening' | 'quiz'>('vocab');
 
   // Scoring states
@@ -33,13 +34,13 @@ export function LessonDetail() {
 
   useEffect(() => {
     if (id) {
-      // Reset quiz state when switching lessons
+      // 1. Clear state for new lesson
       setShowResults(false);
       setAnswers({});
       setScoreInfo(null);
       window.scrollTo({ top: 0, behavior: 'smooth' });
 
-      // Identify previous and next lessons
+      // 2. Identify previous and next lessons
       const allLessons = getLessons();
       const idx = allLessons.findIndex(l => l.id === id);
       if (idx !== -1) {
@@ -47,11 +48,10 @@ export function LessonDetail() {
         setNextLessonId(idx < allLessons.length - 1 ? allLessons[idx + 1].id : null);
       }
 
-      // Get synchronous first, then update async to catch firestore updates
-      const data = getLessonById(id);
-      if (data) {
-        setLesson(data);
-        // Only update last lesson ID in context, don't trigger context updates in a loop
+      // 3. Sync Load: Initial UI state
+      const localData = getLessonById(id);
+      if (localData) {
+        setLesson(localData);
         setLastLessonId(id);
         
         const params = new URLSearchParams(location.search);
@@ -60,23 +60,36 @@ export function LessonDetail() {
           setActiveTab(tabParam as any);
         }
 
-        if (data.vocabulary && data.vocabulary.length > 0) {
-          setActiveWritingVocab(data.vocabulary[0]);
+        if (localData.vocabulary && localData.vocabulary.length > 0) {
+          setActiveWritingVocab(localData.vocabulary[0]);
         }
       }
 
-      // Fetch async to get any remote changes (like generated grammar)
+      // 4. Async Load: Fetch latest from database (deduplicated)
+      if (loadingIdRef.current === id) return;
+      loadingIdRef.current = id;
+
       fetchLessonById(id, true).then(asyncData => {
-        if (asyncData) {
-          setLesson(asyncData);
+        if (asyncData && id === loadingIdRef.current) {
+          setLesson(prev => {
+            // Only update if there are actual changes to prevent unnecessary re-renders
+            // A simple way is to check if grammar or specific fields changed if needed
+            // For now, we trust fetchLessonById returns the latest truth
+            return asyncData;
+          });
         }
       }).catch(err => {
         console.error("fetchLessonById failed:", err);
+      }).finally(() => {
+        // We keep loadingIdRef.current as id to mark it's done for THIS id
+        // In a real app, you might clear it, but here it acts as "already fetched for this mount"
       });
     }
-    // We only want to reset quiz state when the ID changes.
-    // setLastLessonId is now memoized, but id is the primary trigger.
-  }, [id]);
+    
+    return () => {
+      // Cleanup cleanup
+    };
+  }, [id, setLastLessonId]);
 
   const playAudio = (text: string) => {
     const utterance = new SpeechSynthesisUtterance(text);
