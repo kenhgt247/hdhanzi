@@ -5,7 +5,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { cn } from '../../lib/utils';
 
 export function Login() {
-  const { signInWithGoogle, signInWithEmail, signUpWithEmail, loading } = useAuth();
+  const { signInWithGoogle, signInWithEmail, signUpWithEmail, loading, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [error, setError] = useState<string | null>(null);
@@ -18,12 +18,17 @@ export function Login() {
 
   const from = location.state?.from?.pathname || '/student';
 
+  React.useEffect(() => {
+    if (!loading && user && user.id !== 'guest') {
+      navigate(from, { replace: true });
+    }
+  }, [user, loading, navigate, from]);
+
   const handleGoogleAuth = async () => {
     try {
       setError(null);
       setIsSubmitting(true);
       await signInWithGoogle();
-      navigate(from, { replace: true });
     } catch (err: any) {
       if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
         setError('Bạn đã huỷ đăng nhập. Vui lòng thử lại.');
@@ -50,7 +55,6 @@ export function Login() {
       } else {
          await signUpWithEmail(email, password, name);
       }
-      navigate(from, { replace: true });
     } catch (err: any) {
       setError(err.message || 'Đã xảy ra lỗi khi xác thực.');
     } finally {
