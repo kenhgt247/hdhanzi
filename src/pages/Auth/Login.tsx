@@ -16,16 +16,6 @@ export function Login() {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
 
-  const [isInIframe, setIsInIframe] = useState(false);
-
-  React.useEffect(() => {
-    try {
-      setIsInIframe(window.self !== window.top);
-    } catch (e) {
-      setIsInIframe(true);
-    }
-  }, []);
-
   const from = location.state?.from?.pathname || '/student';
 
   React.useEffect(() => {
@@ -45,8 +35,7 @@ export function Login() {
       } else {
         setError(err.message || 'Đã xảy ra lỗi khi xác thực bằng Google.');
       }
-    } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false); // Only set to false on error, because on success it will redirect
     }
   };
 
@@ -172,14 +161,6 @@ export function Login() {
           </div>
 
           <div className="mt-6">
-            {isInIframe && (
-              <div className="mb-4 rounded-md border border-yellow-200 bg-yellow-50 p-4">
-                <p className="text-sm text-yellow-700">
-                  ⚠️ <strong>Chế độ xem trước (Iframe)</strong><br/><br/>
-                  Đăng nhập bằng Google có thể không hoạt động trong chế độ này. Vui lòng nhấn nút <strong>"Mở trong thẻ mới (Open App / Mũi tên chéo)"</strong> ở góc góc trên bên phải thanh công cụ.
-                </p>
-              </div>
-            )}
             <button
               onClick={handleGoogleAuth}
               disabled={isSubmitting}
