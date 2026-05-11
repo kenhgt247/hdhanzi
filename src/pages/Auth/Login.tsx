@@ -175,18 +175,18 @@ export function Login() {
             {isInIframe && (
               <div className="mb-4 rounded-md border border-yellow-200 bg-yellow-50 p-4">
                 <p className="text-sm text-yellow-700">
-                  ⚠️ <strong>Tính năng Đăng nhập bằng Google bị khoá ở chế độ Xem trước (Iframe) do bảo mật trình duyệt.</strong><br/><br/>
-                  Để sử dụng Google Login, bạn <strong>bắt buộc phải nhấn nút "Mở trong thẻ mới (Open App / Mũi tên chéo)"</strong> ở góc góc trên bên phải thanh công cụ. Hoặc đăng nhập bằng Email / Mật khẩu ở mẫu bên trên.
+                  ⚠️ <strong>Chế độ xem trước (Iframe)</strong><br/><br/>
+                  Đăng nhập bằng Google có thể không hoạt động trong chế độ này. Vui lòng nhấn nút <strong>"Mở trong thẻ mới (Open App / Mũi tên chéo)"</strong> ở góc góc trên bên phải thanh công cụ.
                 </p>
               </div>
             )}
             <button
               onClick={handleGoogleAuth}
-              disabled={isSubmitting || isInIframe}
+              disabled={isSubmitting}
               className="flex w-full items-center justify-center gap-3 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="h-5 w-5" />
-              Google
+              <span>{isSubmitting ? 'Đang chuyển hướng...' : 'Đăng nhập bằng Google'}</span>
             </button>
           </div>
         </div>
