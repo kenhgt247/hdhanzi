@@ -20,6 +20,7 @@ interface AuthContextType {
   user: AppUser | null;
   firebaseUser: FirebaseUser | null;
   loading: boolean;
+  authError: string | null;
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, pass: string) => Promise<void>;
   signUpWithEmail: (email: string, pass: string, name: string) => Promise<void>;
@@ -41,6 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!auth) {
@@ -79,8 +81,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(userData);
           // Sync study plan
           studyPlanService.syncLocalPlanWithFirebase(user.uid, userData.targetLevel || 'Beginner');
-        } catch (error) {
-          handleFirestoreError(error, OperationType.CREATE, `users/${user.uid}`);
+        } catch (error: any) {
+          try {
+            handleFirestoreError(error, OperationType.CREATE, `users/${user.uid}`);
+          } catch (e: any) {
+            console.error(e);
+            setAuthError(e.message);
+          }
           setUser(null);
         }
       } else {
@@ -130,7 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user: user || GUEST_USER, firebaseUser, loading, signInWithGoogle, signInWithEmail, signUpWithEmail, signOut }}>
+    <AuthContext.Provider value={{ user: user || GUEST_USER, firebaseUser, loading, authError, signInWithGoogle, signInWithEmail, signUpWithEmail, signOut }}>
       {children}
     </AuthContext.Provider>
   );

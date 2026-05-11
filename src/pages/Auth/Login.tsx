@@ -5,7 +5,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { cn } from '../../lib/utils';
 
 export function Login() {
-  const { signInWithGoogle, signInWithEmail, signUpWithEmail, loading, user } = useAuth();
+  const { signInWithGoogle, signInWithEmail, signUpWithEmail, loading, user, authError } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [error, setError] = useState<string | null>(null);
@@ -17,6 +17,14 @@ export function Login() {
   const [name, setName] = useState('');
 
   const from = location.state?.from?.pathname || '/student';
+
+  React.useEffect(() => {
+    // If there is an auth error from AuthContext (like permission denied), show it
+    if (authError) {
+       setIsSubmitting(false);
+       setError(authError);
+    }
+  }, [authError]);
 
   React.useEffect(() => {
     if (!loading && user && user.id !== 'guest') {
@@ -86,6 +94,15 @@ export function Login() {
         {error && (
           <div className="rounded-md bg-red-50 p-4">
             <p className="text-sm text-red-700">{error}</p>
+          </div>
+        )}
+
+        {authError && (
+          <div className="rounded-md border border-red-300 bg-red-50 p-4">
+             <h3 className="text-sm font-bold text-red-800">⚠️ Lỗi đăng nhập</h3>
+             <p className="text-sm text-red-700 mt-2 text-left">
+                {authError}
+             </p>
           </div>
         )}
 
