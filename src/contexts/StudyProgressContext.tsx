@@ -160,41 +160,43 @@ export const StudyProgressProvider = ({ children }: { children: ReactNode }) => 
     return () => clearInterval(interval);
   }, []);
 
-  const markAttendance = () => {
+  const markAttendance = React.useCallback(() => {
     if (lastActiveDate !== todayStr) {
-      let newStreak = 1;
-      if (lastActiveDate) {
-        const lastDateObj = new Date(lastActiveDate);
-        const todayObj = new Date(todayStr);
-        const diffTime = Math.abs(todayObj.getTime() - lastDateObj.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-        
-        if (diffDays === 1) {
-          newStreak = currentStreak + 1;
-        } else if (diffDays > 1) {
-          newStreak = 1; 
-        } else {
-          newStreak = currentStreak;
-        }
-      }
-      
-      setCurrentStreak(newStreak);
-      setLastActiveDate(todayStr);
-      
       setDailyStats(prev => ({
         ...prev,
-         [todayStr]: prev[todayStr] || { date: todayStr, minutesStudied: 0, wordsLearned: 0, lessonsCompleted: 0 }
+        [todayStr]: prev[todayStr] || { date: todayStr, minutesStudied: 0, wordsLearned: 0, lessonsCompleted: 0 }
       }));
+      
+      setCurrentStreak(prev => {
+        let newStreak = 1;
+        if (lastActiveDate) {
+          const lastDateObj = new Date(lastActiveDate);
+          const todayObj = new Date(todayStr);
+          const diffTime = Math.abs(todayObj.getTime() - lastDateObj.getTime());
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+          
+          if (diffDays === 1) {
+            newStreak = prev + 1;
+          } else if (diffDays > 1) {
+            newStreak = 1; 
+          } else {
+            newStreak = prev;
+          }
+        }
+        return newStreak;
+      });
+      
+      setLastActiveDate(todayStr);
     }
-  };
+  }, [lastActiveDate, todayStr]);
 
   useEffect(() => {
     if (lastActiveDate !== todayStr) {
       markAttendance();
     }
-  }, [todayStr, lastActiveDate]);
+  }, [todayStr, lastActiveDate, markAttendance]);
 
-  const addStudyTime = (minutes: number) => {
+  const addStudyTime = React.useCallback((minutes: number) => {
     setDailyStats(prev => ({
       ...prev,
       [todayStr]: {
@@ -202,12 +204,14 @@ export const StudyProgressProvider = ({ children }: { children: ReactNode }) => 
         minutesStudied: (prev[todayStr]?.minutesStudied || 0) + minutes
       }
     }));
-  };
+  }, [todayStr]);
 
-  const addLearnedWord = (id: string) => {
-    if (learnedWordIds.includes(id)) return;
+  const addLearnedWord = React.useCallback((id: string) => {
+    setLearnedWordIds(prev => {
+      if (prev.includes(id)) return prev;
+      return [...prev, id];
+    });
     
-    setLearnedWordIds(prev => [...prev, id]);
     setDailyStats(prev => ({
       ...prev,
       [todayStr]: {
@@ -215,12 +219,14 @@ export const StudyProgressProvider = ({ children }: { children: ReactNode }) => 
         wordsLearned: (prev[todayStr]?.wordsLearned || 0) + 1
       }
     }));
-  };
+  }, [todayStr]);
 
-  const addCompletedLesson = (id: string) => {
-    if (completedLessonIds.includes(id)) return;
-
-    setCompletedLessonIds(prev => [...prev, id]);
+  const addCompletedLesson = React.useCallback((id: string) => {
+    setCompletedLessonIds(prev => {
+      if (prev.includes(id)) return prev;
+      return [...prev, id];
+    });
+    
     setDailyStats(prev => ({
       ...prev,
       [todayStr]: {
@@ -228,38 +234,56 @@ export const StudyProgressProvider = ({ children }: { children: ReactNode }) => 
         lessonsCompleted: (prev[todayStr]?.lessonsCompleted || 0) + 1
       }
     }));
-  };
+  }, [todayStr]);
 
-  const setTargetLevel = (level: string) => {
+  const setTargetLevel = React.useCallback((level: string) => {
     setTargetLevelState(level);
-  };
+  }, []);
   
-  const setLastLessonId = (id: string) => {
+  const setLastLessonId = React.useCallback((id: string) => {
     setLastLessonIdState(id);
-  };
+  }, []);
 
   const todayStats = dailyStats[todayStr] || { date: todayStr, minutesStudied: 0, wordsLearned: 0, lessonsCompleted: 0 };
   const totalDaysActive = Object.keys(dailyStats).length;
   const totalWordsLearned = Object.values(dailyStats).reduce((sum, day) => sum + (day.wordsLearned || 0), 0);
   
+  const contextValue = React.useMemo(() => ({
+    targetLevel,
+    setTargetLevel,
+    dailyStats,
+    currentStreak,
+    totalDaysActive,
+    totalWordsLearned,
+    todayStats,
+    lastLessonId,
+    learnedWordIds,
+    completedLessonIds,
+    setLastLessonId,
+    markAttendance,
+    addStudyTime,
+    addLearnedWord,
+    addCompletedLesson
+  }), [
+    targetLevel,
+    setTargetLevel,
+    dailyStats,
+    currentStreak,
+    totalDaysActive,
+    totalWordsLearned,
+    todayStats,
+    lastLessonId,
+    learnedWordIds,
+    completedLessonIds,
+    setLastLessonId,
+    markAttendance,
+    addStudyTime,
+    addLearnedWord,
+    addCompletedLesson
+  ]);
+
   return (
-    <StudyProgressContext.Provider value={{
-      targetLevel,
-      setTargetLevel,
-      dailyStats,
-      currentStreak,
-      totalDaysActive,
-      totalWordsLearned,
-      todayStats,
-      lastLessonId,
-      learnedWordIds,
-      completedLessonIds,
-      setLastLessonId,
-      markAttendance,
-      addStudyTime,
-      addLearnedWord,
-      addCompletedLesson
-    }}>
+    <StudyProgressContext.Provider value={contextValue}>
       {children}
     </StudyProgressContext.Provider>
   );

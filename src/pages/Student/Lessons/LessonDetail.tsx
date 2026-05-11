@@ -51,6 +51,7 @@ export function LessonDetail() {
       const data = getLessonById(id);
       if (data) {
         setLesson(data);
+        // Only update last lesson ID in context, don't trigger context updates in a loop
         setLastLessonId(id);
         
         const params = new URLSearchParams(location.search);
@@ -67,14 +68,15 @@ export function LessonDetail() {
       // Fetch async to get any remote changes (like generated grammar)
       fetchLessonById(id, true).then(asyncData => {
         if (asyncData) {
-          console.log("Fetched asyncData grammar:", asyncData.grammar);
           setLesson(asyncData);
         }
       }).catch(err => {
         console.error("fetchLessonById failed:", err);
       });
     }
-  }, [id, setLastLessonId]);
+    // We only want to reset quiz state when the ID changes.
+    // setLastLessonId is now memoized, but id is the primary trigger.
+  }, [id]);
 
   const playAudio = (text: string) => {
     const utterance = new SpeechSynthesisUtterance(text);
@@ -180,7 +182,6 @@ export function LessonDetail() {
                           value={opt} 
                           checked={answers[q.id] === opt}
                           onChange={(e) => {
-                            console.log(`Setting answer for ${q.id} to ${e.target.value}`);
                             handleAnswerChange(q.id, e.target.value);
                           }}
                           disabled={showResults}
@@ -213,7 +214,6 @@ export function LessonDetail() {
                           value={opt} 
                           checked={answers[q.id] === opt}
                           onChange={(e) => {
-                            console.log(`Setting TF answer for ${q.id} to ${e.target.value}`);
                             handleAnswerChange(q.id, e.target.value);
                           }}
                           disabled={showResults}
