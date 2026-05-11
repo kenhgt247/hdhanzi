@@ -1,6 +1,6 @@
 {
-  "name": "Taiwan Study Interview Prep",
-  "description": "An interactive interview preparation tool for students applying to Taiwan study programs, featuring recording and AI assessment.",
+  "name": "HD Hanzi - Taiwan Study Hub",
+  "description": "Nền tảng học tiếng Trung Phồn thể và luyện thi TOCFL chuyên sâu cho du học Đài Loan.",
   "requestFramePermissions": [
     "microphone"
   ]

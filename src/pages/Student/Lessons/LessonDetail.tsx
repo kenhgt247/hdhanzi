@@ -86,6 +86,7 @@ export function LessonDetail() {
 
   const handleAnswerChange = (questionId: string, value: string) => {
     if (showResults) return; // Prevent changing answers after submit
+    console.log(`[Quiz] Question ${questionId} selected answer: ${value}`);
     setAnswers(prev => ({ ...prev, [questionId]: value }));
   };
 
@@ -164,7 +165,6 @@ export function LessonDetail() {
               {q.type === 'multiple_choice' && q.options && (
                 <div className="space-y-2">
                   {q.options.map((opt, optIdx) => {
-                     const optId = `q_${q.id}_opt_${optIdx}`;
                      let optClass = "flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition ";
                      if (showResults) {
                        if (opt === q.correctAnswer) optClass += "border-green-500 bg-green-100 font-bold ";
@@ -174,21 +174,26 @@ export function LessonDetail() {
                        optClass += answers[q.id] === opt ? "border-blue-600 bg-blue-50" : "hover:bg-gray-50 bg-white";
                      }
                      return (
-                      <label key={optIdx} htmlFor={optId} className={optClass}>
-                        <input 
-                          id={optId}
-                          type="radio" 
-                          name={`quiz_${q.id}`} 
-                          value={opt} 
-                          checked={answers[q.id] === opt}
-                          onChange={(e) => {
-                            handleAnswerChange(q.id, e.target.value);
-                          }}
-                          disabled={showResults}
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 cursor-pointer" 
-                        />
+                      <button 
+                        key={optIdx} 
+                        type="button"
+                        onClick={() => {
+                          handleAnswerChange(q.id, opt);
+                        }}
+                        disabled={showResults}
+                        className={cn(
+                          optClass,
+                          "w-full text-left appearance-none"
+                        )}
+                      >
+                        <div className={cn(
+                          "w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors",
+                          answers[q.id] === opt ? "border-blue-600 bg-blue-600 shadow-sm" : "border-gray-300 bg-white"
+                        )}>
+                          {answers[q.id] === opt && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                        </div>
                         <span className="text-gray-800 font-medium">{opt}</span>
-                      </label>
+                      </button>
                     )
                   })}
                 </div>
@@ -196,7 +201,6 @@ export function LessonDetail() {
               {q.type === 'true_false' && q.options && (
                 <div className="flex gap-4">
                   {q.options.map((opt, optIdx) => {
-                     const optId = `q_${q.id}_opt_${optIdx}`;
                      let optClass = "flex-1 flex items-center justify-center gap-3 p-3 rounded-lg border cursor-pointer transition ";
                      if (showResults) {
                        if (opt === q.correctAnswer) optClass += "border-green-500 bg-green-100 font-bold ";
@@ -206,21 +210,26 @@ export function LessonDetail() {
                        optClass += answers[q.id] === opt ? "border-blue-600 bg-blue-50" : "hover:bg-gray-50 bg-white";
                      }
                      return (
-                      <label key={optIdx} htmlFor={optId} className={optClass}>
-                        <input 
-                          id={optId}
-                          type="radio" 
-                          name={`quiz_${q.id}`} 
-                          value={opt} 
-                          checked={answers[q.id] === opt}
-                          onChange={(e) => {
-                            handleAnswerChange(q.id, e.target.value);
-                          }}
-                          disabled={showResults}
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 cursor-pointer" 
-                        />
+                      <button 
+                        key={optIdx} 
+                        type="button"
+                        onClick={() => {
+                          handleAnswerChange(q.id, opt);
+                        }}
+                        disabled={showResults}
+                        className={cn(
+                          optClass,
+                          "appearance-none"
+                        )}
+                      >
+                        <div className={cn(
+                          "w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors",
+                          answers[q.id] === opt ? "border-blue-600 bg-blue-600 shadow-sm" : "border-gray-300 bg-white"
+                        )}>
+                          {answers[q.id] === opt && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                        </div>
                         <span className="text-gray-800 font-medium">{opt}</span>
-                      </label>
+                      </button>
                     )
                   })}
                 </div>
