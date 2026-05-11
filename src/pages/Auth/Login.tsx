@@ -16,6 +16,16 @@ export function Login() {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
 
+  const [isInIframe, setIsInIframe] = useState(false);
+
+  React.useEffect(() => {
+    try {
+      setIsInIframe(window.self !== window.top);
+    } catch (e) {
+      setIsInIframe(true);
+    }
+  }, []);
+
   const from = location.state?.from?.pathname || '/student';
 
   React.useEffect(() => {
@@ -162,9 +172,17 @@ export function Login() {
           </div>
 
           <div className="mt-6">
+            {isInIframe && (
+              <div className="mb-4 rounded-md border border-yellow-200 bg-yellow-50 p-4">
+                <p className="text-sm text-yellow-700">
+                  ⚠️ <strong>Tính năng Đăng nhập bằng Google bị khoá ở chế độ Xem trước (Iframe) do bảo mật trình duyệt.</strong><br/><br/>
+                  Để sử dụng Google Login, bạn <strong>bắt buộc phải nhấn nút "Mở trong thẻ mới (Open App / Mũi tên chéo)"</strong> ở góc góc trên bên phải thanh công cụ. Hoặc đăng nhập bằng Email / Mật khẩu ở mẫu bên trên.
+                </p>
+              </div>
+            )}
             <button
               onClick={handleGoogleAuth}
-              disabled={isSubmitting}
+              disabled={isSubmitting || isInIframe}
               className="flex w-full items-center justify-center gap-3 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="h-5 w-5" />
