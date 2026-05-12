@@ -1,54 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, BookOpen, Clock, Layers, Edit2, Trash2, Upload, X, Sparkles } from 'lucide-react';
+import { Plus, Search, BookOpen, Clock, Layers, Edit2, Trash2, Upload, X, Sparkles, AlertTriangle, FileText } from 'lucide-react';
 import { cn } from '../../../lib/utils';
 import { Lesson } from '../../../types/lesson';
 import { DataImporter } from '../../../components/Admin/DataImporter';
 import { adminService } from '../../../services/adminService';
 import { AICreator } from '../../../components/Admin/AICreator';
 import { AutoGrammarGenerator } from '../../../components/Admin/AutoGrammarGenerator';
-
-function EditLessonModal({ lesson, onClose, onSave }: { lesson?: Lesson | null, onClose: () => void, onSave: (l: any) => void }) {
-  const [formData, setFormData] = useState({
-    title: lesson?.title || '',
-    topic: lesson?.topic || '',
-    stage: lesson?.stage || 'A1'
-  });
-
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-3xl p-6 w-full max-w-lg">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold">{lesson ? 'Sửa bài học' : 'Thêm bài học mới'}</h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full"><X className="w-5 h-5"/></button>
-        </div>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Tên bài học</label>
-            <input type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full px-4 py-2 border rounded-xl" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Chủ đề</label>
-            <input type="text" value={formData.topic} onChange={e => setFormData({...formData, topic: e.target.value})} className="w-full px-4 py-2 border rounded-xl" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Trình độ (Stage)</label>
-            <input type="text" value={formData.stage} onChange={e => setFormData({...formData, stage: e.target.value})} className="w-full px-4 py-2 border rounded-xl" />
-          </div>
-        </div>
-        <div className="flex justify-end gap-3 mt-8">
-          <button onClick={onClose} className="px-6 py-2 text-gray-600 font-medium hover:bg-gray-50 rounded-xl">Hủy</button>
-          <button onClick={() => onSave(formData)} className="px-6 py-2 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700">Lưu thay đổi</button>
-        </div>
-      </div>
-    </div>
-  );
-}
+import { EditLessonModal } from '../../../components/Admin/EditLessonModal';
+import { EditLessonContentModal } from '../../../components/Admin/EditLessonContentModal';
 
 export function AdminLessons() {
   const [showImporter, setShowImporter] = useState(false);
   const [showAICreator, setShowAICreator] = useState(false);
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [editingLesson, setEditingLesson] = useState<Lesson | null | undefined>(undefined);
+  const [editContentLesson, setEditContentLesson] = useState<Lesson | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   
@@ -171,12 +137,21 @@ export function AdminLessons() {
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {paginatedLessons.map((lesson: Lesson) => (
-            <div key={lesson.id} className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+            <div key={lesson.id} className="bg-white hover:border-blue-500 hover:shadow-lg rounded-3xl p-6 border border-gray-100 shadow-sm transition-all group">
               <div className="flex justify-between items-start mb-4">
-                <div className="p-3 bg-blue-50 rounded-2xl">
-                   <BookOpen className="w-6 h-6 text-blue-600" />
+                <div className="flex gap-3">
+                  <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center overflow-hidden shrink-0">
+                     {lesson.imageUrl ? <img src={lesson.imageUrl} alt={lesson.title} className="w-full h-full object-cover" /> : <BookOpen className="w-6 h-6 text-blue-600" />}
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900 line-clamp-1">{lesson.title}</h3>
+                    <p className="text-sm font-medium text-gray-400 line-clamp-1">{lesson.topic}</p>
+                  </div>
                 </div>
-                <div className="flex gap-1">
+                <div className="flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                  <button onClick={() => setEditContentLesson(lesson)} className="p-2 hover:bg-gray-100 rounded-xl transition-colors text-blue-500 font-medium text-sm flex items-center gap-1" title="Sửa nội dung (Từ vựng, Ngữ pháp, Nghe/Đọc)">
+                    <FileText className="w-4 h-4" /> Nội dung
+                  </button>
                   <button onClick={() => setEditingLesson(lesson)} className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
                     <Edit2 className="w-4 h-4 text-gray-500" />
                   </button>
@@ -185,16 +160,20 @@ export function AdminLessons() {
                   </button>
                 </div>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-1">{lesson.title}</h3>
-              <p className="text-sm font-medium text-gray-400 mb-4 line-clamp-1">{lesson.topic}</p>
               
-              <div className="flex items-center gap-2 mb-4">
-                <span className="px-3 py-1 rounded-full text-xs font-black bg-emerald-50 text-emerald-600">
-                  {lesson.stage}
+              <div className="flex flex-wrap items-center gap-2 mb-4">
+                {lesson.status !== 'published' ? (
+                   <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-600 border border-amber-200">Bản nháp</span>
+                ) : (
+                   <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-600">Đã duyệt</span>
+                )}
+                <span className="px-3 py-1 rounded-full text-xs font-black bg-blue-50 text-blue-600 border border-blue-100">
+                  {lesson.level || 'A1'}
                 </span>
-                <span className="px-3 py-1 rounded-full text-xs font-black bg-gray-50 text-gray-600">
+                <span className="px-3 py-1 rounded-full text-xs font-black bg-gray-50 text-gray-600 border border-gray-100">
                   {lesson.vocabulary?.length || 0} từ vựng
                 </span>
+                {lesson.audioUrl && <span className="px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-600 flex items-center gap-1">Nghe</span>}
               </div>
             </div>
           ))}
@@ -243,6 +222,14 @@ export function AdminLessons() {
           lesson={editingLesson} 
           onClose={() => setEditingLesson(undefined)}
           onSave={handleSave}
+        />
+      )}
+
+      {editContentLesson && (
+        <EditLessonContentModal
+           lesson={editContentLesson}
+           onClose={() => setEditContentLesson(null)}
+           onRefresh={fetchLessons}
         />
       )}
     </div>

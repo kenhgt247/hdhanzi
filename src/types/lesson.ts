@@ -2,10 +2,13 @@ export interface Lesson {
   id: string;
   day: number;
   title: string;
-  level: "beginner" | "A1" | "A2" | "B1";
+  level: "beginner" | "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
   stage: string;
   topic: string;
   objectives: string[];
+  status?: "draft" | "published";
+  imageUrl?: string;
+  audioUrl?: string;
   vocabulary: VocabularyItem[];
   sentencePatterns: SentencePattern[];
   grammar?: GrammarNote[];
