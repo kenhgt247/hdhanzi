@@ -64,7 +64,8 @@ export const StudyProgressProvider = ({ children }: { children: ReactNode }) => 
   const [lastLessonId, setLastLessonIdState] = useState<string | null>(null);
   const [learnedWordIds, setLearnedWordIds] = useState<string[]>([]);
   const [completedLessonIds, setCompletedLessonIds] = useState<string[]>([]);
-  const syncingRef = useRef(false);
+  const skipNextSaveRef = useRef(false);
+  const lastSavedRef = useRef<string | null>(null);
 
   // Today's date string
   const todayStr = getTodayDateString();
@@ -97,7 +98,22 @@ export const StudyProgressProvider = ({ children }: { children: ReactNode }) => 
       if (snap.exists()) {
         const data = snap.data();
         if (data) {
-          syncingRef.current = true;
+          // Compare to what we last saved to prevent bounce-back infinite loop
+          const incomingDataToSave = {
+            dailyStats: data.dailyStats || {},
+            currentStreak: data.currentStreak || 0,
+            lastActiveDate: data.lastActiveDate || null,
+            lastLessonId: data.lastLessonId || null,
+            learnedWordIds: data.learnedWordIds || [],
+            completedLessonIds: data.completedLessonIds || [],
+            targetLevel: data.targetLevel || 'TOCFL Band A2'
+          };
+          const incomingStr = JSON.stringify(incomingDataToSave);
+          if (incomingStr === lastSavedRef.current) {
+             return; // Ignore echo from our own write
+          }
+
+          skipNextSaveRef.current = true;
           if (data.targetLevel) setTargetLevelState(data.targetLevel);
           if (data.currentStreak !== undefined) setCurrentStreak(data.currentStreak);
           if (data.lastActiveDate) setLastActiveDate(data.lastActiveDate);
@@ -105,7 +121,6 @@ export const StudyProgressProvider = ({ children }: { children: ReactNode }) => 
           if (data.learnedWordIds) setLearnedWordIds(data.learnedWordIds || []);
           if (data.completedLessonIds) setCompletedLessonIds(data.completedLessonIds || []);
           if (data.dailyStats) setDailyStats(data.dailyStats || {});
-          syncingRef.current = false;
         }
       }
     }, (error) => {
@@ -117,9 +132,6 @@ export const StudyProgressProvider = ({ children }: { children: ReactNode }) => 
 
   // 3. Save to LocalStorage and Firebase whenever state changes
   useEffect(() => {
-    // Only save if not currently syncing from Firebase to avoid loops
-    if (syncingRef.current) return;
-
     const dataToSave = {
       dailyStats: Object.fromEntries(
         Object.entries(dailyStats).map(([key, val]) => [
@@ -142,8 +154,21 @@ export const StudyProgressProvider = ({ children }: { children: ReactNode }) => 
       targetLevel
     };
     
+    const stringified = JSON.stringify(dataToSave);
+    if (lastSavedRef.current === stringified) {
+      return; // Skip if nothing actually changed
+    }
+    
+    if (skipNextSaveRef.current) {
+      skipNextSaveRef.current = false;
+      lastSavedRef.current = stringified; // Still update what we consider the "current" state
+      return; 
+    }
+
+    lastSavedRef.current = stringified;
+
     try {
-      localStorage.setItem('studyStats', JSON.stringify(dataToSave));
+      localStorage.setItem('studyStats', stringified);
     } catch (e) {
       console.error('Safe save to localStorage failed:', e);
       // Fallback: try to save without dailyStats if that's the culprit
@@ -169,7 +194,7 @@ export const StudyProgressProvider = ({ children }: { children: ReactNode }) => 
         // If document doesn't exist yet, we'll wait for AuthContext to create it
       });
     }
-  }, [dailyStats, currentStreak, lastActiveDate, targetLevel, lastLessonId, firebaseUser]);
+  }, [dailyStats, currentStreak, lastActiveDate, targetLevel, lastLessonId, learnedWordIds, completedLessonIds, firebaseUser]);
 
   // Track study time automatically while tab is active
   useEffect(() => {
