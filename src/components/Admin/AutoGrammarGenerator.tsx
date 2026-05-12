@@ -26,40 +26,45 @@ export function AutoGrammarGenerator({ onSuccess }: { onSuccess?: () => void }) 
       const snapshot = await getDocs(lessonsRef);
       const existingLessonsMap = new Map(snapshot.docs.map(d => [d.id, d.data()]));
       
-      const lessonsToProcess = allLessons.filter(lesson => {
-        const existing = existingLessonsMap.get(lesson.id) as any;
-        let hasValidGrammar = false;
-        
-        if (existing && existing.grammar) {
-          if (Array.isArray(existing.grammar) && existing.grammar.length > 0) {
-            hasValidGrammar = true;
-          } else if (existing.grammar.grammar && Array.isArray(existing.grammar.grammar)) {
-            console.log("Found wrapped grammar for", lesson.id, "- AUTO FIXING");
-            // Auto fix the wrapped array immediately!
-            setDoc(doc(db, 'lessons', lesson.id), {
-              ...existing,
-              grammar: existing.grammar.grammar
-            }).catch(console.error);
-            hasValidGrammar = true; // It's fixed now, no need to process
-          } else if (typeof existing.grammar === 'object' && !Array.isArray(existing.grammar)) {
-             // Sometimes Gemini returns { "notes": [...] } or similar
-             const keys = Object.keys(existing.grammar);
-             for(const key of keys) {
-                if (Array.isArray(existing.grammar[key]) && existing.grammar[key].length > 0) {
-                   console.log("Found wrapped grammar under key", key, "for", lesson.id, "- AUTO FIXING");
-                   setDoc(doc(db, 'lessons', lesson.id), {
-                     ...existing,
-                     grammar: existing.grammar[key]
-                   }).catch(console.error);
-                   hasValidGrammar = true;
-                   break;
-                }
-             }
-          }
-        }
-        
-        return !hasValidGrammar;
-      });
+      const prepareLessons = async () => {
+         const toProcess = [];
+         for (const lesson of allLessons) {
+            const existing = existingLessonsMap.get(lesson.id) as any;
+            let hasValidGrammar = false;
+            
+            if (existing && existing.grammar) {
+              if (Array.isArray(existing.grammar) && existing.grammar.length > 0) {
+                hasValidGrammar = true;
+              } else if (existing.grammar.grammar && Array.isArray(existing.grammar.grammar)) {
+                console.log("Found wrapped grammar for", lesson.id, "- AUTO FIXING");
+                await setDoc(doc(db, 'lessons', lesson.id), {
+                  ...existing,
+                  grammar: existing.grammar.grammar
+                });
+                hasValidGrammar = true;
+              } else if (typeof existing.grammar === 'object' && !Array.isArray(existing.grammar)) {
+                 const keys = Object.keys(existing.grammar);
+                 for(const key of keys) {
+                    if (Array.isArray(existing.grammar[key]) && existing.grammar[key].length > 0) {
+                       console.log("Found wrapped grammar under key", key, "for", lesson.id, "- AUTO FIXING");
+                       await setDoc(doc(db, 'lessons', lesson.id), {
+                         ...existing,
+                         grammar: existing.grammar[key]
+                       });
+                       hasValidGrammar = true;
+                       break;
+                    }
+                 }
+              }
+            }
+            if (!hasValidGrammar) {
+               toProcess.push(lesson);
+            }
+         }
+         return toProcess;
+      };
+
+      const lessonsToProcess = await prepareLessons();
 
       setTotal(lessonsToProcess.length);
       

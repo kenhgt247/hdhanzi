@@ -188,18 +188,22 @@ export const adminService = {
 
   async importVocabularyBatch(vocabularies: Partial<Vocab>[]) {
     try {
-      const batch = writeBatch(db);
       const sanitized = JSON.parse(JSON.stringify(vocabularies));
-      sanitized.forEach((vocab: any) => {
-        const docRef = doc(collection(db, 'vocabulary'));
-        batch.set(docRef, {
-          ...vocab,
-          id: docRef.id,
-          createdAt: Timestamp.now(),
-          status: vocab.status || 'new'
-        });
-      });
-      await withTimeout(batch.commit());
+      const chunkSize = 400;
+      for (let i = 0; i < sanitized.length; i += chunkSize) {
+         const chunk = sanitized.slice(i, i + chunkSize);
+         const batch = writeBatch(db);
+         chunk.forEach((vocab: any) => {
+           const docRef = doc(collection(db, 'vocabulary'));
+           batch.set(docRef, {
+             ...vocab,
+             id: docRef.id,
+             createdAt: Timestamp.now(),
+             status: vocab.status || 'new'
+           });
+         });
+         await withTimeout(batch.commit());
+      }
       return { success: true, count: vocabularies.length };
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, 'vocabulary');
@@ -315,17 +319,21 @@ export const adminService = {
 
   async importLessonsBatch(lessons: Partial<Lesson>[]) {
     try {
-      const batch = writeBatch(db);
       const sanitized = JSON.parse(JSON.stringify(lessons));
-      sanitized.forEach((lesson: any) => {
-        const docRef = doc(collection(db, 'lessons'));
-        batch.set(docRef, {
-          ...lesson,
-          id: docRef.id,
-          createdAt: Timestamp.now()
-        });
-      });
-      await withTimeout(batch.commit());
+      const chunkSize = 400;
+      for (let i = 0; i < sanitized.length; i += chunkSize) {
+         const chunk = sanitized.slice(i, i + chunkSize);
+         const batch = writeBatch(db);
+         chunk.forEach((lesson: any) => {
+           const docRef = doc(collection(db, 'lessons'));
+           batch.set(docRef, {
+             ...lesson,
+             id: docRef.id,
+             createdAt: Timestamp.now()
+           });
+         });
+         await withTimeout(batch.commit());
+      }
       return { success: true, count: lessons.length };
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, 'lessons');
@@ -446,23 +454,22 @@ export const adminService = {
       // Remove undefined values to prevent Firestore errors
       const sanitizedTests = JSON.parse(JSON.stringify(tests));
       
-      const promises = sanitizedTests.map(async (test: any, index: number) => {
-        try {
-          const docRef = doc(collection(db, 'mockTests'));
-          await setDoc(docRef, {
-            ...test,
-            id: docRef.id,
-            status: test.status || 'draft',
-            createdAt: Timestamp.now()
-          });
-          return docRef.id;
-        } catch (err: any) {
-          console.error(`Error saving test ${index}:`, err);
-          throw new Error(`Test ${index} failed: ${err.message || String(err)}`);
-        }
-      });
+      const chunkSize = 400;
+      for (let i = 0; i < sanitizedTests.length; i += chunkSize) {
+         const chunk = sanitizedTests.slice(i, i + chunkSize);
+         const batch = writeBatch(db);
+         chunk.forEach((test: any) => {
+           const docRef = doc(collection(db, 'mockTests'));
+           batch.set(docRef, {
+             ...test,
+             id: docRef.id,
+             status: test.status || 'draft',
+             createdAt: Timestamp.now()
+           });
+         });
+         await withTimeout(batch.commit());
+      }
       
-      await withTimeout(Promise.all(promises));
       return { success: true, count: tests.length };
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, 'mockTests');
@@ -472,17 +479,21 @@ export const adminService = {
 
   async importDialoguesBatch(dialogues: any[]) {
     try {
-      const batch = writeBatch(db);
       const sanitized = JSON.parse(JSON.stringify(dialogues));
-      sanitized.forEach((dialogue: any) => {
-        const docRef = doc(collection(db, 'dialogues'));
-        batch.set(docRef, {
-          ...dialogue,
-          id: docRef.id,
-          createdAt: Timestamp.now()
-        });
-      });
-      await withTimeout(batch.commit());
+      const chunkSize = 400;
+      for (let i = 0; i < sanitized.length; i += chunkSize) {
+         const chunk = sanitized.slice(i, i + chunkSize);
+         const batch = writeBatch(db);
+         chunk.forEach((dialogue: any) => {
+           const docRef = doc(collection(db, 'dialogues'));
+           batch.set(docRef, {
+             ...dialogue,
+             id: docRef.id,
+             createdAt: Timestamp.now()
+           });
+         });
+         await withTimeout(batch.commit());
+      }
       return { success: true, count: dialogues.length };
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, 'dialogues');

@@ -3,7 +3,8 @@ import { Volume2, Check, X, Mic, BookOpen, Send, PenTool, ArrowLeft, Brain, File
 import { useNavigate } from 'react-router-dom';
 import { cn } from '../../../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
-import { tocflVocabularies, Vocab } from '../../../data/vocabulary';
+import { vocabularyService } from '../../../services/vocabularyService';
+import { tocflVocabularies as seedVocabularies, Vocab } from '../../../data/vocabulary';
 import { HanziWriterPractice } from '../../../components/HanziWriterPractice';
 import { useStudyProgress } from '../../../contexts/StudyProgressContext';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -23,11 +24,23 @@ export function Vocabulary() {
   const [isPracticing, setIsPracticing] = useState(false);
   const [practiceMode, setPracticeMode] = useState<PracticeMode>('flashcard');
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [tocflVocabularies, setTocflVocabularies] = useState<Vocab[]>(seedVocabularies);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      const data = await vocabularyService.getVocabularies();
+      setTocflVocabularies(data);
+      setLoading(false);
+    };
+    loadData();
+  }, []);
 
   const filteredVocabs = useMemo(() => {
     if (selectedLevel === 'All') return tocflVocabularies;
     return tocflVocabularies.filter(v => v.level === selectedLevel);
-  }, [selectedLevel]);
+  }, [selectedLevel, tocflVocabularies]);
 
   const totalPages = Math.ceil(filteredVocabs.length / itemsPerPage);
 
@@ -174,112 +187,138 @@ export function Vocabulary() {
             <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900">Từ vựng TOCFL {selectedLevel}</h1>
           </div>
         </div>
-        <button 
-           onClick={() => handleStartPractice('flashcard')}
-           className="px-6 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center gap-2"
-        >
-          <BookOpen className="w-5 h-5" fill="currentColor" />
-          Học trang này
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Mục tiêu bài học */}
-        <div className="bg-white rounded-[2rem] p-6 sm:p-8 border border-gray-100 shadow-sm flex flex-col relative overflow-hidden">
-           <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50/50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
-           <div className="relative z-10">
-              <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2 mb-8">
-                <BookOpen className="w-5 h-5 text-blue-600" />
-                Mục tiêu bài học
-              </h2>
-              <ul className="space-y-5">
-                <li className="flex items-start gap-4">
-                  <div className="mt-0.5 w-6 h-6 rounded-full bg-emerald-50 flex items-center justify-center border border-emerald-100 flex-shrink-0 text-emerald-500">
-                    <Check className="w-4 h-4" strokeWidth={3} />
-                  </div>
-                  <span className="text-gray-700 font-medium leading-relaxed">Nắm vững <strong className="text-gray-900">{filteredVocabs.length} từ vựng</strong> theo chuẩn TOCFL</span>
-                </li>
-                <li className="flex items-start gap-4">
-                  <div className="mt-0.5 w-6 h-6 rounded-full bg-emerald-50 flex items-center justify-center border border-emerald-100 flex-shrink-0 text-emerald-500">
-                    <Check className="w-4 h-4" strokeWidth={3} />
-                  </div>
-                  <span className="text-gray-700 font-medium leading-relaxed">Cải thiện <strong className="text-gray-900">phát âm và thanh điệu</strong> chuẩn Đài Loan qua các bài luyện nói</span>
-                </li>
-                <li className="flex items-start gap-4">
-                  <div className="mt-0.5 w-6 h-6 rounded-full bg-emerald-50 flex items-center justify-center border border-emerald-100 flex-shrink-0 text-emerald-500">
-                    <Check className="w-4 h-4" strokeWidth={3} />
-                  </div>
-                  <span className="text-gray-700 font-medium leading-relaxed">Biết nhận diện <strong className="text-gray-900">mặt chữ Phồn thể</strong> và cách viết chữ Hán cơ bản.</span>
-                </li>
-              </ul>
-           </div>
-        </div>
-
-        {/* Bảng Học Luyện */}
-        <div className="bg-slate-50/80 rounded-[2rem] p-6 sm:p-8 border border-gray-100 flex flex-col items-center justify-center shadow-sm">
-           <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-gray-100 mb-4 text-blue-500">
-             <Brain className="w-7 h-7" />
-           </div>
-           <h3 className="text-2xl tracking-tight font-extrabold text-gray-900 mb-2">{paginatedVocabs.length} từ vựng trang {currentPage}</h3>
-           <p className="text-sm text-gray-500 mb-8 max-w-[280px] text-center leading-relaxed">Học và ôn tập hiệu quả với phương pháp lặp lại ngắt quãng (SRS)</p>
-           
-           <div className="grid grid-cols-2 gap-3 w-full max-w-sm">
-              <button 
-                onClick={() => handleStartPractice('flashcard')} 
-                className="flex items-center justify-center gap-2 p-3.5 bg-blue-600 text-white font-bold rounded-xl shadow-sm hover:bg-blue-700 active:scale-95 transition-all"
-              >
-                Học trang này
-              </button>
-              <button 
-                onClick={() => handleStartPractice('quiz')} 
-                className="flex items-center justify-center gap-2 p-3.5 bg-blue-100 hover:bg-blue-200 text-blue-700 font-bold rounded-xl transition-all shadow-sm active:scale-95"
-              >
-                Làm Quiz
-              </button>
-              <button 
-                 onClick={() => handleStartPractice('speaking')} 
-                 className="flex items-center justify-center gap-2 p-3.5 bg-emerald-500 text-white font-bold rounded-xl shadow-sm hover:bg-emerald-600 active:scale-95 transition-all"
-              >
-                <Mic className="w-4 h-4" /> Luyện nói
-              </button>
-              <button 
-                 onClick={() => handleStartPractice('listening')}
-                 className="flex items-center justify-center gap-2 p-3.5 bg-amber-500 text-white font-bold rounded-xl hover:bg-amber-600 transition-all shadow-sm active:scale-95"
-              >
-                <FileAudio className="w-4 h-4" /> Luyện nghe
-              </button>
-              <button 
-                 onClick={() => handleStartPractice('listening_writing')} 
-                 className="flex items-center justify-center gap-2 p-3.5 bg-purple-500 text-white font-bold rounded-xl shadow-sm hover:bg-purple-600 active:scale-95 transition-all"
-              >
-                <Keyboard className="w-4 h-4" /> Nghe & Viết
-              </button>
-              <button 
-                 onClick={() => handleStartPractice('drawing')} 
-                 className="flex items-center justify-center gap-2 p-3.5 bg-rose-500 text-white font-bold rounded-xl shadow-sm hover:bg-rose-600 active:scale-95 transition-all"
-              >
-                <NotebookPen className="w-4 h-4" /> Viết Phồn thể
-              </button>
-           </div>
-        </div>
-      </div>
-
-      <div className="pt-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-           <h3 className="text-xl font-bold text-gray-900">Danh sách từ vựng</h3>
-           <div className="flex items-center gap-3">
-             <span className="text-sm text-gray-500 font-medium">Cấp độ:</span>
+        <div className="flex items-center gap-3">
              <select 
                value={selectedLevel}
                onChange={(e) => setSelectedLevel(e.target.value)}
-               className="text-sm font-semibold text-gray-700 bg-white border border-gray-200 rounded-xl py-2 px-3 outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-sm hover:bg-gray-50"
+               className="text-sm font-semibold text-gray-700 bg-white border border-gray-200 rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-sm hover:bg-gray-50"
              >
                {['A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'All'].map(level => (
                  <option key={level} value={level}>{level === 'All' ? 'Tất cả' : `TOCFL ${level}`}</option>
                ))}
              </select>
-           </div>
+
+             <button 
+                onClick={() => handleStartPractice('flashcard')}
+                disabled={loading || filteredVocabs.length === 0}
+                className="px-6 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+             >
+               <BookOpen className="w-5 h-5" fill="currentColor" />
+               Học trang này
+             </button>
         </div>
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center items-center p-20 flex-col gap-4">
+          <div className="w-8 h-8 rounded-full border-4 border-blue-500/30 border-t-blue-600 animate-spin" />
+          <p className="text-gray-500 font-medium">Đang tải từ vựng...</p>
+        </div>
+      ) : filteredVocabs.length === 0 ? (
+        <div className="bg-white rounded-3xl p-12 border border-gray-100 shadow-sm text-center">
+          <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-bold text-gray-900 mb-2">Chưa có từ vựng</h3>
+          <p className="text-gray-500">Chưa có từ vựng nào cho cấp độ này. Vui lòng quay lại sau.</p>
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Mục tiêu bài học */}
+            <div className="bg-white rounded-[2rem] p-6 sm:p-8 border border-gray-100 shadow-sm flex flex-col relative overflow-hidden">
+               <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50/50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
+               <div className="relative z-10">
+                  <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2 mb-8">
+                    <BookOpen className="w-5 h-5 text-blue-600" />
+                    Mục tiêu bài học
+                  </h2>
+                  <ul className="space-y-5">
+                    <li className="flex items-start gap-4">
+                      <div className="mt-0.5 w-6 h-6 rounded-full bg-emerald-50 flex items-center justify-center border border-emerald-100 flex-shrink-0 text-emerald-500">
+                        <Check className="w-4 h-4" strokeWidth={3} />
+                      </div>
+                      <span className="text-gray-700 font-medium leading-relaxed">Nắm vững <strong className="text-gray-900">{filteredVocabs.length} từ vựng</strong> theo chuẩn TOCFL</span>
+                    </li>
+                    <li className="flex items-start gap-4">
+                      <div className="mt-0.5 w-6 h-6 rounded-full bg-emerald-50 flex items-center justify-center border border-emerald-100 flex-shrink-0 text-emerald-500">
+                        <Check className="w-4 h-4" strokeWidth={3} />
+                      </div>
+                      <span className="text-gray-700 font-medium leading-relaxed">Cải thiện <strong className="text-gray-900">phát âm và thanh điệu</strong> chuẩn Đài Loan qua các bài luyện nói</span>
+                    </li>
+                    <li className="flex items-start gap-4">
+                      <div className="mt-0.5 w-6 h-6 rounded-full bg-emerald-50 flex items-center justify-center border border-emerald-100 flex-shrink-0 text-emerald-500">
+                        <Check className="w-4 h-4" strokeWidth={3} />
+                      </div>
+                      <span className="text-gray-700 font-medium leading-relaxed">Biết nhận diện <strong className="text-gray-900">mặt chữ Phồn thể</strong> và cách viết chữ Hán cơ bản.</span>
+                    </li>
+                  </ul>
+               </div>
+            </div>
+
+            {/* Bảng Học Luyện */}
+            <div className="bg-slate-50/80 rounded-[2rem] p-6 sm:p-8 border border-gray-100 flex flex-col items-center justify-center shadow-sm">
+               <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-gray-100 mb-4 text-blue-500">
+                 <Brain className="w-7 h-7" />
+               </div>
+               <h3 className="text-2xl tracking-tight font-extrabold text-gray-900 mb-2">{paginatedVocabs.length} từ vựng trang {currentPage}</h3>
+               <p className="text-sm text-gray-500 mb-8 max-w-[280px] text-center leading-relaxed">Học và ôn tập hiệu quả với phương pháp lặp lại ngắt quãng (SRS)</p>
+               
+               <div className="grid grid-cols-2 gap-3 w-full max-w-sm">
+                  <button 
+                    onClick={() => handleStartPractice('flashcard')} 
+                    className="flex items-center justify-center gap-2 p-3.5 bg-blue-600 text-white font-bold rounded-xl shadow-sm hover:bg-blue-700 active:scale-95 transition-all"
+                  >
+                    Học trang này
+                  </button>
+                  <button 
+                    onClick={() => handleStartPractice('quiz')} 
+                    className="flex items-center justify-center gap-2 p-3.5 bg-blue-100 hover:bg-blue-200 text-blue-700 font-bold rounded-xl transition-all shadow-sm active:scale-95"
+                  >
+                    Làm Quiz
+                  </button>
+                  <button 
+                     onClick={() => handleStartPractice('speaking')} 
+                     className="flex items-center justify-center gap-2 p-3.5 bg-emerald-500 text-white font-bold rounded-xl shadow-sm hover:bg-emerald-600 active:scale-95 transition-all"
+                  >
+                    <Mic className="w-4 h-4" /> Luyện nói
+                  </button>
+                  <button 
+                     onClick={() => handleStartPractice('listening')}
+                     className="flex items-center justify-center gap-2 p-3.5 bg-amber-500 text-white font-bold rounded-xl hover:bg-amber-600 transition-all shadow-sm active:scale-95"
+                  >
+                    <FileAudio className="w-4 h-4" /> Luyện nghe
+                  </button>
+                  <button 
+                     onClick={() => handleStartPractice('listening_writing')} 
+                     className="flex items-center justify-center gap-2 p-3.5 bg-purple-500 text-white font-bold rounded-xl shadow-sm hover:bg-purple-600 active:scale-95 transition-all"
+                  >
+                    <Keyboard className="w-4 h-4" /> Nghe & Viết
+                  </button>
+                  <button 
+                     onClick={() => handleStartPractice('drawing')} 
+                     className="flex items-center justify-center gap-2 p-3.5 bg-rose-500 text-white font-bold rounded-xl shadow-sm hover:bg-rose-600 active:scale-95 transition-all"
+                  >
+                    <NotebookPen className="w-4 h-4" /> Viết Phồn thể
+                  </button>
+               </div>
+            </div>
+          </div>
+
+          <div className="pt-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+               <h3 className="text-xl font-bold text-gray-900">Danh sách từ vựng</h3>
+               <div className="flex items-center gap-3">
+                 <span className="text-sm text-gray-500 font-medium">Cấp độ:</span>
+                 <select 
+                   value={selectedLevel}
+                   onChange={(e) => setSelectedLevel(e.target.value)}
+                   className="text-sm font-semibold text-gray-700 bg-white border border-gray-200 rounded-xl py-2 px-3 outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-sm hover:bg-gray-50"
+                 >
+                   {['A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'All'].map(level => (
+                     <option key={level} value={level}>{level === 'All' ? 'Tất cả' : `TOCFL ${level}`}</option>
+                   ))}
+                 </select>
+               </div>
+            </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {paginatedVocabs.map((vocab, i) => {
@@ -382,6 +421,8 @@ export function Vocabulary() {
           </div>
         )}
       </div>
+      </>
+      )}
     </div>
   );
 }
