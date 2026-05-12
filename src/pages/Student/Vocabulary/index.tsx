@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { Volume2, Check, X, Mic, BookOpen, Send, PenTool, ArrowLeft, Brain, FileAudio, Keyboard, NotebookPen, Headphones, Square, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Volume2, Check, X, Mic, BookOpen, Send, PenTool, ArrowLeft, Brain, FileAudio, Keyboard, NotebookPen, Headphones, Square, CheckCircle2, AlertCircle, Target, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '../../../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
@@ -53,15 +53,24 @@ export function Vocabulary() {
     setCurrentPage(1);
   }, [selectedLevel]);
 
+  const [showSummary, setShowSummary] = useState(false);
+
   const handleStartPractice = (mode: PracticeMode) => {
     setPracticeMode(mode);
     setIsPracticing(true);
     setCurrentIndex(0);
+    setShowSummary(false);
   };
 
   const handleNext = () => {
     if (paginatedVocabs.length > 0) {
-      setCurrentIndex((prev) => (prev + 1) % paginatedVocabs.length);
+      setCurrentIndex((prev) => {
+        if (prev + 1 >= paginatedVocabs.length) {
+          setShowSummary(true);
+          return prev;
+        }
+        return prev + 1;
+      });
     }
   };
 
@@ -158,13 +167,67 @@ export function Vocabulary() {
 
         <div className="min-h-[450px]">
           <AnimatePresence mode="wait">
-            {practiceMode === 'flashcard' && <FlashcardMode key="flashcard" vocab={currentVocab} onNext={handleNext} onRemembered={handleRemembered} onMistake={() => handleMistake(currentVocab, 'meaning')} playAudio={playAudio} />}
-            {practiceMode === 'quiz' && <QuizMode key="quiz" vocab={currentVocab} onNext={handleNext} allVocabs={filteredVocabs} onMistake={() => handleMistake(currentVocab, 'meaning')} />}
-            {practiceMode === 'listening' && <ListeningMode key="listening" vocab={currentVocab} onNext={handleNext} allVocabs={filteredVocabs} playAudio={playAudio} onMistake={() => handleMistake(currentVocab, 'listening')} />}
-            {practiceMode === 'listening_writing' && <WritingMode key="writing" vocab={currentVocab} onNext={handleNext} playAudio={playAudio} onMistake={() => handleMistake(currentVocab, 'hanzi')} />}
-            {practiceMode === 'conversation' && <ConversationListeningMode key="conversation" vocab={currentVocab} onNext={handleNext} playAudio={playAudio} />}
-            {practiceMode === 'speaking' && <SpeakingMode key="speaking" vocab={currentVocab} onNext={handleNext} playAudio={playAudio} onMistake={() => handleMistake(currentVocab, 'speaking')} />}
-            {practiceMode === 'drawing' && <DrawingMode key="drawing" vocab={currentVocab} onNext={handleNext} />}
+            {showSummary ? (
+               <motion.div 
+                 initial={{ opacity: 0, scale: 0.95 }}
+                 animate={{ opacity: 1, scale: 1 }}
+                 exit={{ opacity: 0, scale: 0.95 }}
+                 className="flex h-full min-h-[450px] flex-col items-center justify-center rounded-[2rem] bg-white p-8 shadow-sm border border-slate-100 relative overflow-hidden"
+               >
+                 <div className="absolute top-0 right-0 w-40 h-40 bg-emerald-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
+                 <div className="absolute top-0 left-0 w-40 h-40 bg-blue-50 rounded-full blur-3xl -translate-y-1/2 -translate-x-1/3" />
+                 <div className="relative z-10 flex flex-col items-center text-center max-w-md">
+                   <div className="w-20 h-20 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center mb-6 shadow-sm">
+                     <Target className="w-10 h-10" />
+                   </div>
+                   <h2 className="text-2xl font-black text-gray-900 mb-2">Hoàn thành {paginatedVocabs.length} từ!</h2>
+                   <p className="text-gray-500 mb-8 leading-relaxed">Bạn đã học xong danh sách từ hôm nay. Đừng quên ôn tập các từ yếu để nắm vững bài hơn.</p>
+                   
+                   <div className="flex flex-col w-full gap-3">
+                     <button 
+                       onClick={() => {
+                         navigate('/student/weak-words');
+                       }}
+                       className="w-full py-3.5 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold rounded-xl transition-all shadow-sm flex justify-center items-center gap-2"
+                     >
+                       <Zap className="w-5 h-5"/> Ôn tập từ yếu
+                     </button>
+                     {currentPage < totalPages && (
+                       <button
+                         onClick={() => {
+                           setCurrentPage(prev => prev + 1);
+                           setIsPracticing(true);
+                           setCurrentIndex(0);
+                           setShowSummary(false);
+                         }}
+                         className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all shadow-sm shadow-blue-200"
+                       >
+                         Học tiếp {itemsPerPage} từ mới ({currentPage + 1}/{totalPages})
+                       </button>
+                     )}
+                     <button
+                        onClick={() => {
+                          setIsPracticing(false);
+                          setShowSummary(false);
+                        }}
+                        className="w-full py-3.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition-all shadow-sm"
+                     >
+                       Trở về danh sách
+                     </button>
+                   </div>
+                 </div>
+               </motion.div>
+            ) : (
+              <>
+                {practiceMode === 'flashcard' && <FlashcardMode key="flashcard" vocab={currentVocab} onNext={handleNext} onRemembered={handleRemembered} onMistake={() => handleMistake(currentVocab, 'meaning')} playAudio={playAudio} />}
+                {practiceMode === 'quiz' && <QuizMode key="quiz" vocab={currentVocab} onNext={handleNext} allVocabs={filteredVocabs} onMistake={() => handleMistake(currentVocab, 'meaning')} />}
+                {practiceMode === 'listening' && <ListeningMode key="listening" vocab={currentVocab} onNext={handleNext} allVocabs={filteredVocabs} playAudio={playAudio} onMistake={() => handleMistake(currentVocab, 'listening')} />}
+                {practiceMode === 'listening_writing' && <WritingMode key="writing" vocab={currentVocab} onNext={handleNext} playAudio={playAudio} onMistake={() => handleMistake(currentVocab, 'hanzi')} />}
+                {practiceMode === 'conversation' && <ConversationListeningMode key="conversation" vocab={currentVocab} onNext={handleNext} playAudio={playAudio} />}
+                {practiceMode === 'speaking' && <SpeakingMode key="speaking" vocab={currentVocab} onNext={handleNext} playAudio={playAudio} onMistake={() => handleMistake(currentVocab, 'speaking')} />}
+                {practiceMode === 'drawing' && <DrawingMode key="drawing" vocab={currentVocab} onNext={handleNext} />}
+              </>
+            )}
           </AnimatePresence>
         </div>
       </div>

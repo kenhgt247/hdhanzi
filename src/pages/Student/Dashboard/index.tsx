@@ -2,15 +2,89 @@ import React from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useStudyProgress } from '../../../contexts/StudyProgressContext';
 import { useDailyPlan } from '../../../contexts/DailyPlanContext';
-import { BookOpen, Trophy, Target, Flame, ChevronRight, Zap } from 'lucide-react';
+import { BookOpen, Trophy, Target, Flame, ChevronRight, Zap, Award, Star, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '../../../lib/utils';
 
 export function StudentDashboard() {
   const { user } = useAuth();
-  const { currentStreak, totalWordsLearned, totalDaysActive } = useStudyProgress();
+  const { currentStreak, totalWordsLearned, totalDaysActive, dailyStats, completedLessonIds } = useStudyProgress();
   const { plan } = useDailyPlan();
   const navigate = useNavigate();
+
+  // Calculate total minutes studied
+  const totalMinutesStudied = Object.values(dailyStats).reduce((sum, stat) => sum + (stat.minutesStudied || 0), 0);
+  const completedLessonsCount = completedLessonIds?.length || 0;
+
+  // Define achievements
+  const achievements = [
+    {
+      id: 'streak_3',
+      name: 'Rực lửa',
+      description: 'Học liên tục 3 ngày',
+      icon: Flame,
+      color: 'text-orange-500',
+      bgColor: 'bg-orange-100',
+      progress: Math.min(currentStreak, 3),
+      max: 3,
+      achieved: currentStreak >= 3,
+    },
+    {
+      id: 'words_50',
+      name: 'Ngân hàng từ vựng 1',
+      description: 'Học 50 từ vựng',
+      icon: BookOpen,
+      color: 'text-blue-500',
+      bgColor: 'bg-blue-100',
+      progress: Math.min(totalWordsLearned, 50),
+      max: 50,
+      achieved: totalWordsLearned >= 50,
+    },
+    {
+      id: 'words_500',
+      name: 'Ngân hàng từ vựng 2',
+      description: 'Học 500 từ vựng',
+      icon: BookOpen,
+      color: 'text-indigo-500',
+      bgColor: 'bg-indigo-100',
+      progress: Math.min(totalWordsLearned, 500),
+      max: 500,
+      achieved: totalWordsLearned >= 500,
+    },
+    {
+      id: 'time_120',
+      name: 'Ong chăm chỉ',
+      description: 'Học tổng cộng 120 phút',
+      icon: Clock,
+      color: 'text-emerald-500',
+      bgColor: 'bg-emerald-100',
+      progress: Math.min(totalMinutesStudied, 120),
+      max: 120,
+      achieved: totalMinutesStudied >= 120,
+    },
+    {
+      id: 'lessons_5',
+      name: 'Kẻ chinh phục',
+      description: 'Hoàn thành 5 bài học',
+      icon: Target,
+      color: 'text-purple-500',
+      bgColor: 'bg-purple-100',
+      progress: Math.min(completedLessonsCount, 5),
+      max: 5,
+      achieved: completedLessonsCount >= 5,
+    },
+    {
+      id: 'lessons_all',
+      name: 'Bậc thầy TOCFL',
+      description: 'Hoàn thành 50 bài học',
+      icon: Award,
+      color: 'text-amber-500',
+      bgColor: 'bg-amber-100',
+      progress: Math.min(completedLessonsCount, 50),
+      max: 50,
+      achieved: completedLessonsCount >= 50,
+    }
+  ];
 
   return (
     <div className="space-y-6 pb-10">
@@ -157,6 +231,63 @@ export function StudentDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Achievements Section */}
+      <div className="rounded-xl border bg-white p-5 shadow-sm">
+        <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <Award className="w-5 h-5 text-amber-500" /> Thành tựu của bạn
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          {achievements.map((achievement) => {
+            const Icon = achievement.icon;
+            return (
+              <div 
+                key={achievement.id} 
+                className={cn(
+                  "p-4 rounded-xl border relative overflow-hidden transition-all",
+                  achievement.achieved 
+                    ? "bg-amber-50/30 border-amber-200" 
+                    : "bg-gray-50/50 border-gray-100 grayscale-[0.6] opacity-80"
+                )}
+              >
+                {achievement.achieved && (
+                  <div className="absolute top-2 right-2 text-amber-500">
+                    <Star className="w-4 h-4 fill-current" />
+                  </div>
+                )}
+                <div className="flex items-center gap-3 mb-3">
+                  <div className={cn("p-2.5 rounded-xl shrink-0", achievement.bgColor, achievement.color)}>
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className={cn("font-bold text-sm truncate", achievement.achieved ? "text-gray-900" : "text-gray-600")}>
+                      {achievement.name}
+                    </h3>
+                    <p className="text-xs text-gray-500 truncate">{achievement.description}</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-1">
+                  <div className="flex justify-between text-[11px] font-semibold text-gray-500">
+                    <span>{achievement.progress} / {achievement.max}</span>
+                    <span>{Math.round((achievement.progress / achievement.max) * 100)}%</span>
+                  </div>
+                  <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
+                    <div 
+                      className={cn(
+                        "h-full rounded-full transition-all duration-1000",
+                        achievement.achieved ? "bg-amber-500" : "bg-gray-400"
+                      )}
+                      style={{ width: `${(achievement.progress / achievement.max) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
+
