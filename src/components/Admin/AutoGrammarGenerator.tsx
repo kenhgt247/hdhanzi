@@ -5,15 +5,13 @@ import { collection, getDocs, doc, setDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { allLessons } from '../../data/seedLessons';
 
-export function AutoGrammarGenerator() {
+export function AutoGrammarGenerator({ onSuccess }: { onSuccess?: () => void }) {
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [total, setTotal] = useState(0);
   const [status, setStatus] = useState('');
 
-  const handleGenerate = async () => {
-    if (!window.confirm('Quá trình này sẽ sử dụng AI để tự động tạo ngữ pháp cho tất cả bài học chưa có ngữ pháp. Có thể mất vài phút. Bạn có muốn tiếp tục?')) return;
-    
+  const handleGenerate = async () => {    
     setLoading(true);
     setStatus('Đang tải danh sách bài học...');
     
@@ -132,7 +130,8 @@ The output must be a standard JSON array of objects, with NO markdown formatting
         await new Promise(r => setTimeout(r, 2000));
       }
 
-      setStatus('Hoàn tất! Vui lòng tải lại trang.');
+      setStatus('Hoàn tất!');
+      if (onSuccess) onSuccess();
     } catch (err: any) {
       console.error(err);
       setStatus(`Lỗi: ${err.message}`);

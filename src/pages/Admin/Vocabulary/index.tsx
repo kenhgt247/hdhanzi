@@ -4,6 +4,7 @@ import { tocflVocabularies, Vocab } from '../../../data/vocabulary';
 import { cn } from '../../../lib/utils';
 import { DataImporter } from '../../../components/Admin/DataImporter';
 import { AICreator } from '../../../components/Admin/AICreator';
+import { AutoVocabularyGenerator } from '../../../components/Admin/AutoVocabularyGenerator';
 import { adminService } from '../../../services/adminService';
 
 function EditVocabModal({ vocab, onClose, onSave }: { vocab?: Vocab | null, onClose: () => void, onSave: (v: any) => void }) {
@@ -38,7 +39,7 @@ function EditVocabModal({ vocab, onClose, onSave }: { vocab?: Vocab | null, onCl
             <label className="block text-sm font-medium text-gray-700 mb-1">Trình độ (TOCFL)</label>
             <select value={formData.level} onChange={e => setFormData({...formData, level: e.target.value})} className="w-full px-4 py-2 border rounded-xl">
               <option value="A1">A1</option><option value="A2">A2</option><option value="B1">B1</option>
-              <option value="B2">B2</option><option value="C1">C1</option>
+              <option value="B2">B2</option><option value="C1">C1</option><option value="C2">C2</option>
             </select>
           </div>
         </div>
@@ -159,6 +160,8 @@ export function AdminVocabulary() {
         />
       )}
 
+      <AutoVocabularyGenerator onSuccess={() => fetchVocabularies()} />
+
       <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col sm:flex-row gap-4 items-center">
         <div className="relative flex-1 w-full">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -183,6 +186,7 @@ export function AdminVocabulary() {
             <option value="B1">TOCFL B1</option>
             <option value="B2">TOCFL B2</option>
             <option value="C1">TOCFL C1</option>
+            <option value="C2">TOCFL C2</option>
           </select>
         </div>
       </div>

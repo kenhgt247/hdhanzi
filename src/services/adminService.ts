@@ -18,13 +18,8 @@ import { MockTest, MockTestResult, WeakWord } from '../types/study';
 import { Lesson } from '../types/lesson';
 import { Vocab } from '../data/vocabulary';
 
-const withTimeout = <T>(promise: Promise<T>, ms = 25000): Promise<T> => {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) => 
-      setTimeout(() => reject(new Error('Firebase không phản hồi. Điều này thường do bạn đã CHẠM GIỚI HẠN QUOTA miễn phí của Firebase (hoặc mất kết nối mạng). Hãy kiểm tra Firebase Console hoặc thử lại vào ngày mai.')), ms)
-    )
-  ]);
+const withTimeout = <T>(promise: Promise<T>, ms = 60000): Promise<T> => {
+  return promise;
 };
 
 export interface StudentStats {
@@ -457,6 +452,7 @@ export const adminService = {
           await setDoc(docRef, {
             ...test,
             id: docRef.id,
+            status: test.status || 'draft',
             createdAt: Timestamp.now()
           });
           return docRef.id;

@@ -74,7 +74,11 @@ export const studyPlanService = {
         if (plan.date === today) return plan;
       }
       const newPlan = await generateDefaultPlan('guest', today, level);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newPlan));
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(newPlan));
+      } catch (e) {
+        console.error("Failed to save initial plan to localStorage:", e);
+      }
       return newPlan;
     }
 
@@ -147,7 +151,11 @@ export const studyPlanService = {
 
     if (userId === 'guest') {
       plan.updatedAt = updatedAt;
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(plan));
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(plan));
+      } catch (e) {
+        console.error("Failed to save plan to localStorage:", e);
+      }
     } else {
       const planRef = doc(db, 'users', userId, 'dailyPlans', date);
       try {

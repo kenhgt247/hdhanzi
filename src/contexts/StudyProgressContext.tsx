@@ -121,15 +121,37 @@ export const StudyProgressProvider = ({ children }: { children: ReactNode }) => 
     if (syncingRef.current) return;
 
     const dataToSave = {
-      dailyStats,
+      dailyStats: Object.fromEntries(
+        Object.entries(dailyStats).map(([key, val]) => [
+          key,
+          {
+            ...val,
+            // Ensure values are plain primitives and dates are strings
+            date: String(val.date || key),
+            minutesStudied: Number(val.minutesStudied || 0),
+            wordsLearned: Number(val.wordsLearned || 0),
+            lessonsCompleted: Number(val.lessonsCompleted || 0)
+          }
+        ])
+      ),
       currentStreak,
       lastActiveDate,
       lastLessonId,
-      learnedWordIds,
-      completedLessonIds,
+      learnedWordIds: learnedWordIds.filter(id => typeof id === 'string'),
+      completedLessonIds: completedLessonIds.filter(id => typeof id === 'string'),
       targetLevel
     };
-    localStorage.setItem('studyStats', JSON.stringify(dataToSave));
+    
+    try {
+      localStorage.setItem('studyStats', JSON.stringify(dataToSave));
+    } catch (e) {
+      console.error('Safe save to localStorage failed:', e);
+      // Fallback: try to save without dailyStats if that's the culprit
+      try {
+        const fallbackData = { ...dataToSave, dailyStats: {} };
+        localStorage.setItem('studyStats', JSON.stringify(fallbackData));
+      } catch (e2) {}
+    }
 
     // Firebase update (debounce or throttled if needed, but for these infrequent stats it's okay)
     if (firebaseUser) {

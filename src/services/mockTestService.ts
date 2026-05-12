@@ -11,7 +11,12 @@ export const mockTestService = {
       const firestoreTests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MockTest));
       
       const seedTestsMap = new Map(fallbackMockTests.map((t: MockTest) => [t.id, t]));
-      firestoreTests.forEach(t => seedTestsMap.set(t.id, t));
+      firestoreTests.forEach(t => {
+        // Seed tests or explicitly published tests
+        if (t.status !== 'draft') {
+          seedTestsMap.set(t.id, t);
+        }
+      });
       
       return Array.from(seedTestsMap.values());
     } catch (error) {

@@ -1,23 +1,33 @@
 import React, { useState, useMemo } from 'react';
 import { Search, Volume2, BookA, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { tocflVocabularies } from '../../../data/vocabulary';
+import { vocabularyService } from '../../../services/vocabularyService';
+import { Vocab } from '../../../data/vocabulary';
 import { cn } from '../../../lib/utils';
 import { HanziWriterPractice } from '../../../components/HanziWriterPractice';
 
 export function Dictionary() {
   const [query, setQuery] = useState('');
   const [selectedVocab, setSelectedVocab] = useState<any>(null);
+  const [allVocabs, setAllVocabs] = useState<Vocab[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  React.useEffect(() => {
+    vocabularyService.getVocabularies().then(data => {
+      setAllVocabs(data);
+      setLoading(false);
+    });
+  }, []);
 
   const results = useMemo(() => {
     if (!query.trim()) return [];
     const lowerQuery = query.toLowerCase();
-    return tocflVocabularies.filter(v => 
+    return allVocabs.filter(v => 
       v.traditional.includes(lowerQuery) || 
       v.vietnamese.toLowerCase().includes(lowerQuery) ||
       v.pinyin.toLowerCase().includes(lowerQuery)
     ).slice(0, 20); // Limit to 20 results for performance
-  }, [query]);
+  }, [query, allVocabs]);
 
   const playAudio = (text: string, e?: React.MouseEvent) => {
     e?.stopPropagation();
@@ -66,7 +76,9 @@ export function Dictionary() {
            </div>
            
            <div className="overflow-y-auto flex-grow p-2 space-y-1 custom-scrollbar">
-             {query.trim() === '' ? (
+             {loading ? (
+               <div className="p-8 text-center text-gray-400 font-medium">Đang tải dữ liệu...</div>
+             ) : query.trim() === '' ? (
                <div className="p-8 text-center text-gray-400 font-medium">
                   Hãy nhập từ khóa để tra cứu
                </div>

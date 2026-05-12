@@ -67,6 +67,7 @@ export interface MockTest {
   level: TOCFLLevel;
   durationMinutes: number;
   questions: MockQuestion[];
+  status?: 'draft' | 'published';
 }
 
 export interface MockTestResult {

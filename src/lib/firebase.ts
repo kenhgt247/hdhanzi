@@ -1,7 +1,8 @@
 /// <reference types="vite/client" />
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { initializeFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 const firebaseConfig = {
   apiKey: "AIzaSyBxMMsTJc_xoo2oqmxd3wpg3wo7BQbzVqU",
   authDomain: "hdhanzi.firebaseapp.com",
@@ -14,7 +15,8 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+export const db = initializeFirestore(app, { experimentalForceLongPolling: true });
+export const storage = getStorage(app);
 
 export enum OperationType {
   CREATE = 'create',
@@ -43,8 +45,14 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
   };
   
   if (errorMessage.toLowerCase().includes('permission')) {
-    console.error('Firestore Permission Error: ', JSON.stringify(errInfo));
-    throw new Error(JSON.stringify(errInfo));
+    const safeInfo = {
+      error: String(errInfo.error),
+      operationType: String(errInfo.operationType),
+      path: String(errInfo.path || 'unknown'),
+      userId: String(errInfo.authInfo?.userId || 'none')
+    };
+    console.error('Firestore Permission Error: ', JSON.stringify(safeInfo));
+    throw new Error(JSON.stringify(safeInfo));
   } else {
     console.warn(`Firestore Warning (${operationType} on ${path}): ${errorMessage}`);
     // Don't throw for offline/missing db errors so fallbacks can work!

@@ -159,7 +159,7 @@ export function AdminLessons() {
         </div>
       </div>
 
-      <AutoGrammarGenerator />
+      <AutoGrammarGenerator onSuccess={() => fetchLessons()} />
 
       {loading ? (
         <div className="p-6 text-center text-gray-500 bg-white rounded-3xl border border-gray-100">Đang tải...</div>

@@ -5,6 +5,8 @@ import { cn } from '../../../lib/utils';
 import { DataImporter } from '../../../components/Admin/DataImporter';
 import { adminService } from '../../../services/adminService';
 import { AICreator } from '../../../components/Admin/AICreator';
+import { AutoMockTestGenerator } from '../../../components/Admin/AutoMockTestGenerator';
+import { EditMockTestQuestionsModal } from '../../../components/Admin/EditMockTestQuestionsModal';
 
 function EditMockTestModal({ test, onClose, onSave }: { test?: any | null, onClose: () => void, onSave: (t: any) => void }) {
   const [formData, setFormData] = useState({
@@ -48,6 +50,7 @@ export function AdminMockTests() {
   const [showAICreator, setShowAICreator] = useState(false);
   const [tests, setTests] = useState<any[]>(seedMockTests);
   const [editingTest, setEditingTest] = useState<any | null | undefined>(undefined);
+  const [editQuestionsTest, setEditQuestionsTest] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   
@@ -90,6 +93,16 @@ export function AdminMockTests() {
       await adminService.deleteMockTest(id);
       fetchTests();
     }
+  };
+
+  const handleTogglePublish = async (test: any) => {
+    if (test.id.length <= 5) {
+      alert("Đề thi mẫu tự động xuất bản.");
+      return;
+    }
+    const newStatus = test.status === 'draft' ? 'published' : 'draft';
+    await adminService.updateMockTest(test.id, { status: newStatus });
+    fetchTests();
   };
 
   const filteredTests = tests.filter(t => 
@@ -152,6 +165,8 @@ export function AdminMockTests() {
         />
       )}
 
+      <AutoMockTestGenerator onSuccess={() => fetchTests()} />
+
       <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col sm:flex-row gap-4 items-center">
         <div className="relative flex-1 w-full">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -189,6 +204,17 @@ export function AdminMockTests() {
                   Level {test.level}
                 </div>
                 <div className="flex gap-2">
+                   {test.id.length > 5 && (
+                     <button 
+                       onClick={() => handleTogglePublish(test)} 
+                       className={cn(
+                         "px-3 py-1 rounded-full text-xs font-bold transition-colors",
+                         test.status !== 'draft' ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200" : "bg-orange-100 text-orange-700 hover:bg-orange-200"
+                       )}
+                     >
+                       {test.status !== 'draft' ? 'Đã duyệt' : 'Chờ duyệt'}
+                     </button>
+                   )}
                    <button onClick={() => setEditingTest(test)} className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
                      <Edit2 className="w-4 h-4 text-gray-500" />
                    </button>
@@ -216,7 +242,16 @@ export function AdminMockTests() {
                <div className="flex-1 text-xs text-gray-400 font-medium">
                  Đã có 12 học viên tham gia thi đề này
                </div>
-               <button className="px-4 py-2 text-sm font-bold text-blue-600 hover:bg-blue-50 rounded-xl transition-colors">
+               <button 
+                 onClick={() => {
+                   if (test.id.length <= 5) {
+                     alert("Không thể sửa câu hỏi của dữ liệu mẫu.");
+                     return;
+                   }
+                   setEditQuestionsTest(test);
+                 }}
+                 className="px-4 py-2 text-sm font-bold text-blue-600 hover:bg-blue-50 rounded-xl transition-colors"
+               >
                  Chỉnh sửa câu hỏi
                </button>
             </div>
@@ -268,6 +303,14 @@ export function AdminMockTests() {
           test={editingTest} 
           onClose={() => setEditingTest(undefined)}
           onSave={handleSave}
+        />
+      )}
+
+      {editQuestionsTest && (
+        <EditMockTestQuestionsModal
+           test={editQuestionsTest}
+           onClose={() => setEditQuestionsTest(null)}
+           onRefresh={fetchTests}
         />
       )}
     </div>

@@ -69,7 +69,11 @@ export function InterviewPrep() {
   const handleSaveDraft = () => {
     const updatedDrafts = { ...userDrafts, [activeQuestion.id]: { vi: viDraftInput, zh: draftInput } };
     setUserDrafts(updatedDrafts);
-    localStorage.setItem('interviewDrafts', JSON.stringify(updatedDrafts));
+    try {
+      localStorage.setItem('interviewDrafts', JSON.stringify(updatedDrafts));
+    } catch (e) {
+      console.error("Failed to save drafts:", e);
+    }
     // Optional: show a small toast instead of alert
     alert('Đã lưu kịch bản trả lời!');
   };
@@ -171,7 +175,11 @@ Luôn phải trả về định dạng chuẩn xác.`;
           const base64Audio = reader.result as string;
           const updatedAudios = { ...audioUrls, [activeQuestion.id]: base64Audio };
           setAudioUrls(updatedAudios);
-          localStorage.setItem('interviewAudios', JSON.stringify(updatedAudios));
+          try {
+            localStorage.setItem('interviewAudios', JSON.stringify(updatedAudios));
+          } catch (e) {
+            console.error("Failed to save audio:", e);
+          }
         };
       };
 
@@ -217,7 +225,11 @@ Luôn phải trả về định dạng chuẩn xác.`;
     const updatedAudios = { ...audioUrls };
     delete updatedAudios[questionId];
     setAudioUrls(updatedAudios);
-    localStorage.setItem('interviewAudios', JSON.stringify(updatedAudios));
+    try {
+      localStorage.setItem('interviewAudios', JSON.stringify(updatedAudios));
+    } catch (e) {
+      console.error("Failed to update audios after delete:", e);
+    }
   };
 
   const currentIndex = interviewQuestions.findIndex(q => q.id === activeQuestion.id);
